@@ -1,5 +1,5 @@
 
-namespace RfgNetworkAPI.Win32
+namespace RfgNetworking.Win32
 {
     public typealias HINSTANCE = int;
     public typealias PSTR = char8*;

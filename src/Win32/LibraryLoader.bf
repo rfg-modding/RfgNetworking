@@ -1,6 +1,6 @@
 using System;
 
-namespace RfgNetworkAPI.Win32
+namespace RfgNetworking.Win32
 {
     public function int FARPROC();
 

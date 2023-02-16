@@ -1,30 +1,44 @@
 FileVersion = 1
 
 [Project]
-Name = "RfgNetworkAPI"
+Name = "RfgNetworking"
 TargetType = "BeefLib"
-StartupObject = "RfgNetworkAPI.Program"
+StartupObject = "RfgNetworking.Program"
 
 [Configs.Debug.Win32]
 BuildKind = "DynamicLib"
+TargetName = "sw_api"
+PostBuildCmds = ["CopyFilesIfNewer(\"$(BuildDir)/sw_api.dll\", \"D:/GOG/Games/Red Faction Guerrilla Re-Mars-tered/\")"]
+DebugCommand = "D:\\GOG\\Games\\Red Faction Guerrilla Re-Mars-tered\\rfg.exe"
+DebugWorkingDirectory = "d:\\GOG\\Games\\Red Faction Guerrilla Re-Mars-tered"
 
 [Configs.Debug.Win64]
 BuildKind = "DynamicLib"
+TargetName = "sw_api"
 
 [Configs.Release.Win32]
 BuildKind = "DynamicLib"
+TargetName = "sw_api"
+PostBuildCmds = ["CopyFilesIfNewer(\"$(BuildDir)/sw_api.dll\", \"D:/GOG/Games/Red Faction Guerrilla Re-Mars-tered/\")"]
+DebugCommand = "D:\\GOG\\Games\\Red Faction Guerrilla Re-Mars-tered\\rfg.exe"
+DebugWorkingDirectory = "D:\\GOG\\Games\\Red Faction Guerrilla Re-Mars-tered\\"
 
 [Configs.Release.Win64]
 BuildKind = "DynamicLib"
+TargetName = "sw_api"
 
 [Configs.Paranoid.Win32]
 BuildKind = "DynamicLib"
+TargetName = "sw_api"
 
 [Configs.Paranoid.Win64]
 BuildKind = "DynamicLib"
+TargetName = "sw_api"
 
 [Configs.Test.Win32]
 BuildKind = "DynamicLib"
+TargetName = "sw_api"
 
 [Configs.Test.Win64]
 BuildKind = "DynamicLib"
+TargetName = "sw_api"

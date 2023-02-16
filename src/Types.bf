@@ -1,20 +1,17 @@
 using System;
 
-namespace RfgNetworkAPI
-{
-	typealias u8 = uint8;
-	typealias u16 = uint16;
-	typealias u32 = uint32;
-	typealias u64 = uint64;
+typealias u8 = uint8;
+typealias u16 = uint16;
+typealias u32 = uint32;
+typealias u64 = uint64;
 
-	typealias i8 = int8;
-	typealias i16 = int16;
-	typealias i32 = int32;
-	typealias i64 = int64;
+typealias i8 = int8;
+typealias i16 = int16;
+typealias i32 = int32;
+typealias i64 = int64;
 
-	typealias f32 = float;
-	typealias f64 = double;
-}
+typealias f32 = float;
+typealias f64 = double;
 
 static
 {
@@ -22,17 +19,17 @@ static
     [Comptime]
 	static void ValidateRfgNetworkAPITypeSizes()
     {
-        Compiler.Assert(sizeof(RfgNetworkAPI.u8) == 1);
-        Compiler.Assert(sizeof(RfgNetworkAPI.u16) == 2);
-        Compiler.Assert(sizeof(RfgNetworkAPI.u32) == 4);
-        Compiler.Assert(sizeof(RfgNetworkAPI.u64) == 8);
+        Compiler.Assert(sizeof(u8) == 1);
+        Compiler.Assert(sizeof(u16) == 2);
+        Compiler.Assert(sizeof(u32) == 4);
+        Compiler.Assert(sizeof(u64) == 8);
 
-        Compiler.Assert(sizeof(RfgNetworkAPI.i8) == 1);
-        Compiler.Assert(sizeof(RfgNetworkAPI.i16) == 2);
-        Compiler.Assert(sizeof(RfgNetworkAPI.i32) == 4);
-        Compiler.Assert(sizeof(RfgNetworkAPI.i64) == 8);
+        Compiler.Assert(sizeof(i8) == 1);
+        Compiler.Assert(sizeof(i16) == 2);
+        Compiler.Assert(sizeof(i32) == 4);
+        Compiler.Assert(sizeof(i64) == 8);
 
-        Compiler.Assert(sizeof(RfgNetworkAPI.f32) == 4);
-        Compiler.Assert(sizeof(RfgNetworkAPI.f64) == 8);
+        Compiler.Assert(sizeof(f32) == 4);
+        Compiler.Assert(sizeof(f64) == 8);
     }
 }
