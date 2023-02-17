@@ -66,7 +66,7 @@ namespace RfgNetworking.API
                     {
                         StringView paramName = vtfuncSignature.GetParamName(i);
                         if (i == 0)
-                            wrappers += scope $"({vtfuncSignature.GetParamType(i).GetFullName(.. scope .())})_originalInterface"; //Used instead of &this since I was getting code generation problems when marking the vtable funcs as mutable (maybe was doing it wrong)
+                            wrappers += scope $"({vtfuncSignature.GetParamType(i).GetFullName(.. scope .())})_originalInterface";
                         else
                             wrappers +=  scope $"{paramName}";
 
