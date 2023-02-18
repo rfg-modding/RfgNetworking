@@ -94,6 +94,7 @@ namespace RfgNetworkAPI
         static bool steamClientWrapperInitialized = false;
         static SteamClientDebugWrapper* SteamClientWrapper = null;
         static SteamUserDebugWrapper* SteamUserWrapper = null;
+        static SteamFriendsDebugWrapper* SteamFriendsWrapper = null;
 
         [Export, CLink, Log]
         public static bool SW_CCSys_Init()
@@ -147,6 +148,10 @@ namespace RfgNetworkAPI
                     SteamUserWrapper = new SteamUserDebugWrapper();
                     SteamUserWrapper.Init(steamApiContext.User, steamApiContext.User.Vtable);
                     steamApiContext.User = SteamUserWrapper;
+
+                    SteamFriendsWrapper = new SteamFriendsDebugWrapper();
+                    SteamFriendsWrapper.Init(steamApiContext.Friends, steamApiContext.Friends.Vtable);
+                    steamApiContext.Friends = SteamFriendsWrapper;
 				}
                 Logger.Write(scope $"SW_CCSys_DynamicInit(CallbackCounterAndContext* callbackCounterAndContext: 0x{(int)(void*)callbackCounterAndContext:X})");
                 Logger.Write(scope $" -> CSteamAPIContext*(0x{(int)(void*)steamApiContext:X})");

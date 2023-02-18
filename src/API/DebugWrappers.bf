@@ -19,6 +19,12 @@ namespace RfgNetworking.API
 
     }
 
+    [DebugWrapper<ISteamFriends.VTable>, CRepr]
+    public struct SteamFriendsDebugWrapper : ISteamFriends
+    {
+
+    }
+
     //Generates wrapper functions for a steam interface. These log every time the interface is used and any data passed to or from it.
     [AttributeUsage(.Struct)]
     public struct DebugWrapperAttribute<TInterface> : Attribute, IOnTypeInit
@@ -118,6 +124,11 @@ namespace RfgNetworking.API
                             StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
                             wrappers += scope $" -> {returnTypeNameShortened}(0x{{(int)(void*)result:X}})";
                     	}
+                        else if (vtfuncSignature.ReturnType == typeof(char8*))
+                        {
+                            StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
+                            wrappers += scope $" -> {returnTypeNameShortened}(\"\"{{scope String()..Append(result)}}\"\")";
+                        }
                         else
                         {
                             wrappers += scope $" -> {returnTypeName}({{result}})";

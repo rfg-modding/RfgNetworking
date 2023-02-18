@@ -103,8 +103,6 @@ namespace RfgNetworking.API
     {
         public ISteamUser.VTable* Vtable;
 
-        //Todo: Define remaining functions
-
         [CRepr]
         public struct VTable
         {
@@ -145,12 +143,81 @@ namespace RfgNetworking.API
     {
         public ISteamFriends.VTable* Vtable;
 
-        //Todo: Define remaining functions
-
         [CRepr]
         public struct VTable
         {
-            //Todo: Define remaining vtable funcs
+            public function char8*(ISteamFriends* this) GetPersonaName;
+            public function SteamAPICall_t(ISteamFriends* this, char8* pchPersonaName) SetPersonaName;
+            public function EPersonaState(ISteamFriends* this) GetPersonaState;
+            public function int(ISteamFriends* this, int iFriendFlags) GetFriendCount;
+            public function CSteamID(ISteamFriends* this, int iFriend, int iFriendFlags) GetFriendByIndex;
+            public function EFriendRelationship(ISteamFriends* this, CSteamID steamIDFriend) GetFriendRelationship;
+            public function EPersonaState(ISteamFriends* this, CSteamID steamIDFriend) GetFriendPersonaState;
+            public function char8*(ISteamFriends* this, CSteamID steamIDFriend) GetFriendPersonaName;
+            public function bool(ISteamFriends* this, CSteamID steamIDFriend, FriendGameInfo_t *pFriendGameInfo) GetFriendGamePlayed;
+            public function char8*(ISteamFriends* this, CSteamID steamIDFriend, int iPersonaName) GetFriendPersonaNameHistory;
+            public function i32(ISteamFriends* this, CSteamID steamIDFriend) GetFriendSteamLevel;
+            public function char8*(ISteamFriends* this, CSteamID steamIDPlayer) GetPlayerNickname;
+            public function i32(ISteamFriends* this) GetFriendsGroupCount;
+            public function FriendsGroupID_t(ISteamFriends* this, i32 iFG) GetFriendsGroupIDByIndex;
+            public function char8*(ISteamFriends* this, FriendsGroupID_t friendsGroupID) GetFriendsGroupName;
+            public function i32(ISteamFriends* this, FriendsGroupID_t friendsGroupID) GetFriendsGroupMembersCount;
+            public function void(ISteamFriends* this, FriendsGroupID_t friendsGroupID, CSteamID* pOutSteamIDMembers, i32 nMembersCount) GetFriendsGroupMembersList;
+            public function bool(ISteamFriends* this, CSteamID steamIDFriend, int iFriendFlags) HasFriend;
+            public function i32(ISteamFriends* this) GetClanCount;
+            public function CSteamID(ISteamFriends* this, i32 iClan) GetClanByIndex;//CSteamID* __return, i32) GetClanByIndex;
+            public function char8*(ISteamFriends* this, CSteamID steamIDClan) GetClanName;
+            public function char8*(ISteamFriends* this, CSteamID steamIDClan) GetClanTag;
+            public function bool(ISteamFriends* this, CSteamID steamIDClan, i32* pnOnline, i32* pnInGame, i32* pnChatting) GetClanActivityCounts;
+            public function SteamAPICall_t(ISteamFriends* this, CSteamID *psteamIDClans, i32 cClansToRequest) DownloadClanActivityCounts;
+            public function i32(ISteamFriends* this, CSteamID steamIDSource) GetFriendCountFromSource;
+            public function CSteamID(ISteamFriends* this, CSteamID steamIDSource, i32 iFriend) GetFriendFromSourceByIndex;//CSteamID* __return, CSteamID, i32) GetFriendFromSourceByIndex;
+            public function bool(ISteamFriends* this, CSteamID steamIDUser, CSteamID steamIDSource) IsUserInSource;
+            public function void(ISteamFriends* this, CSteamID steamIDUser, bool bSpeaking) SetInGameVoiceSpeaking;
+            public function void(ISteamFriends* this, char8* pchDialog) ActivateGameOverlay;
+            public function void(ISteamFriends* this, char8* pchDialog, CSteamID steamID) ActivateGameOverlayToUser;
+            public function void(ISteamFriends* this, char8* pchURL) ActivateGameOverlayToWebPage;
+            public function void(ISteamFriends* this, AppId_t nAppID, EOverlayToStoreFlag eFlag) ActivateGameOverlayToStore;
+            public function void(ISteamFriends* this, CSteamID steamIDUserPlayedWith) SetPlayedWith;
+            public function void(ISteamFriends* this, CSteamID steamIDLobby) ActivateGameOverlayInviteDialog;
+            public function int(ISteamFriends* this, CSteamID steamIDFriend) GetSmallFriendAvatar;
+            public function int(ISteamFriends* this, CSteamID steamIDFriend) GetMediumFriendAvatar;
+            public function int(ISteamFriends* this, CSteamID steamIDFriend) GetLargeFriendAvatar;
+            public function bool(ISteamFriends* this, CSteamID steamIDUser, bool bRequireNameOnly) RequestUserInformation;
+            public function SteamAPICall_t(ISteamFriends* this, CSteamID steamIDClan) RequestClanOfficerList;
+            public function CSteamID(ISteamFriends* this, CSteamID steamIDClan) GetClanOwner; //CSteamID* __return, CSteamID) GetClanOwner;
+            public function int(ISteamFriends* this, CSteamID steamIDClan) GetClanOfficerCount;
+            public function CSteamID(ISteamFriends* this, CSteamID steamIDClan, int iOfficer) GetClanOfficerByIndex; //CSteamID* __return, CSteamID, i32) GetClanOfficerByIndex;
+            public function u32(ISteamFriends* this) GetUserRestrictions;
+            public function bool(ISteamFriends* this, char8* pchKey, char8* pchValue) SetRichPresence;
+            public function void(ISteamFriends* this) ClearRichPresence;
+            public function char8*(ISteamFriends* this, CSteamID steamIDFriend, char8* pchKey) GetFriendRichPresence;
+            public function int(ISteamFriends* this, CSteamID steamIDFriend) GetFriendRichPresenceKeyCount;
+            public function char8*(ISteamFriends* this, CSteamID steamIDFriend, int iKey) GetFriendRichPresenceKeyByIndex;
+            public function void(ISteamFriends* this, CSteamID steamIDFriend) RequestFriendRichPresence;
+            public function bool(ISteamFriends* this, CSteamID steamIDFriend, char8* pchConnectString) InviteUserToGame;
+            public function int(ISteamFriends* this) GetCoplayFriendCount;
+            public function CSteamID(ISteamFriends* this, int iCoplayFriend) GetCoplayFriend; // CSteamID* __return, i32) GetCoplayFriend;
+            public function int(ISteamFriends* this, CSteamID steamIDFriend) GetFriendCoplayTime;
+            public function AppId_t(ISteamFriends* this, CSteamID steamIDFriend) GetFriendCoplayGame;
+            public function SteamAPICall_t(ISteamFriends* this, CSteamID steamIDClan) JoinClanChatRoom;
+            public function bool(ISteamFriends* this, CSteamID steamIDClan) LeaveClanChatRoom;
+            public function int(ISteamFriends* this, CSteamID steamIDClan) GetClanChatMemberCount;
+            public function CSteamID(ISteamFriends* this, CSteamID steamIDClan, int iUser) GetChatMemberByIndex; //CSteamID* __return, CSteamID, i32) GetChatMemberByIndex;
+            public function bool(ISteamFriends* this, CSteamID steamIDClanChat, char8* pchText) SendClanChatMessage;
+            public function int(ISteamFriends* this, CSteamID steamIDClanChat, int iMessage, void* prgchText, int cchTextMax, EChatEntryType* peChatEntryType, CSteamID* psteamidChatter) GetClanChatMessage;
+            public function bool(ISteamFriends* this, CSteamID steamIDClanChat, CSteamID steamIDUser) IsClanChatAdmin;
+            public function bool(ISteamFriends* this, CSteamID steamIDClanChat) IsClanChatWindowOpenInSteam;
+            public function bool(ISteamFriends* this, CSteamID steamIDClanChat) OpenClanChatWindowInSteam;
+            public function bool(ISteamFriends* this, CSteamID steamIDClanChat) CloseClanChatWindowInSteam;
+            public function bool(ISteamFriends* this, bool bInterceptEnabled) SetListenForFriendsMessages;
+            public function bool(ISteamFriends* this, CSteamID steamIDFriend, char8* pchMsgToSend) ReplyToFriendMessage;
+            public function int(ISteamFriends* this, CSteamID steamIDFriend, int iMessageID, void *pvData, int cubData, EChatEntryType* peChatEntryType) GetFriendMessage;
+            public function SteamAPICall_t(ISteamFriends* this, CSteamID steamID) GetFollowerCount;
+            public function SteamAPICall_t(ISteamFriends* this, CSteamID steamID) IsFollowing;
+            public function SteamAPICall_t(ISteamFriends* this, u32 unStartIndex) EnumerateFollowingList;
+            public function bool(ISteamFriends* this, CSteamID steamIDClan) IsClanPublic;
+            public function bool(ISteamFriends* this, CSteamID steamIDClan) IsClanOfficialGameGroup;
         }
     }
 
@@ -272,6 +339,7 @@ namespace RfgNetworking.API
         }
     }
 
+#region Not implemented by vanilla GOG sw_api.dll
     [CRepr]
     public struct ISteamMatchmakingServers
     {
@@ -355,6 +423,7 @@ namespace RfgNetworking.API
     {
         public void* Vtable; //Not implemented by the GOG version of sw_api.dll
     }
+#endregion
 
     [CRepr]
     public struct CCallbackBase
@@ -414,6 +483,18 @@ namespace RfgNetworking.API
 
     }*/
 
+    typealias FriendsGroupID_t = i16;
+
+    [CRepr]
+    public struct FriendGameInfo_t
+    {
+        public CGameID m_gameID;
+        public u32 m_unGameIP;
+        public u16 m_usGamePort;
+        public u16 m_usQueryPort;
+        public CSteamID m_steamIDLobby;
+    }
+
     public enum EAccountType
     {
     	k_EAccountTypeInvalid = 0,
@@ -467,5 +548,53 @@ namespace RfgNetworking.API
         k_EP2PSendUnreliableNoDelay = 1,
         k_EP2PSendReliable = 2,
         k_EP2PSendReliableWithBuffering = 3
+    }
+
+    public enum EOverlayToStoreFlag
+    {
+        k_EOverlayToStoreFlag_None = 0,
+        k_EOverlayToStoreFlag_AddToCart = 1,
+        k_EOverlayToStoreFlag_AddToCartAndShow = 2,
+    }
+
+    public enum EChatEntryType
+    {
+        k_EChatEntryTypeInvalid = 0,
+	    k_EChatEntryTypeChatMsg = 1,
+	    k_EChatEntryTypeTyping = 2,
+	    k_EChatEntryTypeInviteGame = 3,
+	    k_EChatEntryTypeEmote = 4,
+	    k_EChatEntryTypeLeftConversation = 6,
+	    k_EChatEntryTypeEntered = 7,
+	    k_EChatEntryTypeWasKicked = 8,
+	    k_EChatEntryTypeWasBanned = 9,
+	    k_EChatEntryTypeDisconnected = 10,
+	    k_EChatEntryTypeHistoricalChat = 11,
+	    k_EChatEntryTypeLinkBlocked	= 14
+    }
+
+    public enum EPersonaState
+    {
+        k_EPersonaStateOffline = 0,
+	    k_EPersonaStateOnline = 1,
+	    k_EPersonaStateBusy = 2,
+	    k_EPersonaStateAway = 3,
+	    k_EPersonaStateSnooze = 4,
+	    k_EPersonaStateLookingToTrade = 5,
+	    k_EPersonaStateLookingToPlay = 6,
+	    k_EPersonaStateMax = 7
+    }
+
+    public enum EFriendRelationship
+    {
+        k_EFriendRelationshipNone = 0,
+	    k_EFriendRelationshipBlocked = 1,
+	    k_EFriendRelationshipRequestRecipient = 2,
+	    k_EFriendRelationshipFriend	= 3,
+	    k_EFriendRelationshipRequestInitiator = 4,
+	    k_EFriendRelationshipIgnored = 5,
+	    k_EFriendRelationshipIgnoredFriend = 6,
+	    k_EFriendRelationshipSuggested_DEPRECATED = 7,
+	    k_EFriendRelationshipMax = 8,
     }
 }
