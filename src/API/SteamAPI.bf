@@ -3,11 +3,6 @@ using System;
 
 namespace RfgNetworking.API
 {
-    typealias HSteamPipe = i32;
-    typealias HSteamUser = i32;
-    typealias AppId_t = u32;
-    typealias SteamAPICall_t = u64;
-
     public static class DebugWrapperContext
     {
         public static CSteamAPIContext* SteamAPIContext = null;
@@ -62,7 +57,7 @@ namespace RfgNetworking.API
             public function HSteamPipe(ISteamClient* this) CreateSteamPipe;
             public function bool(ISteamClient* this, HSteamPipe hSteamPipe) BReleaseSteamPipe;
             public function HSteamUser(ISteamClient* this, HSteamPipe hSteamPipe) ConnectToGlobalUser;
-            public function HSteamUser(ISteamClient* this, HSteamPipe hSteamPipe, EAccountType eAccountType) CreateLocalUser;
+            public function HSteamUser(ISteamClient* this, HSteamPipe hSteamPipe, AccountType eAccountType) CreateLocalUser;
             public function void(ISteamClient* this, HSteamPipe hSteamPipe, HSteamUser hUser) ReleaseUser;
             public function ISteamUser*(ISteamClient* this, HSteamUser hSteamUser, HSteamPipe hSteamPipe, char8* pchVersion) GetISteamUser;
             public function ISteamGameServer*(ISteamClient* this, HSteamUser hSteamUser, HSteamPipe hSteamPipe, char8* pchVersion) GetISteamGameServer;
@@ -116,15 +111,15 @@ namespace RfgNetworking.API
             public function bool(ISteamUser* this, char8* pchBuffer, i32 cubBuffer) GetUserDataFolder;
             public function void(ISteamUser* this) StartVoiceRecording;
             public function void(ISteamUser* this) StopVoiceRecording;
-            public function EVoiceResult(ISteamUser* this, u32* pcbCompressed, u32* pcbUncompressed_Deprecated, u32 nUncompressedVoiceDesiredSampleRate_Deprecated) GetAvailableVoice;
-            public function EVoiceResult(ISteamUser* this, bool bWantCompressed, void* pDestBuffer, u32 cbDestBufferSize, uint32* nBytesWritten, bool bWantUncompressed_Deprecated, void* pUncompressedDestBuffer_Deprecated, u32 cbUncompressedDestBufferSize_Deprecated, u32* nUncompressBytesWritten_Deprecated, u32 nUncompressedVoiceDesiredSampleRate_Deprecated) GetVoice;
-            public function EVoiceResult(ISteamUser* this, void* pCompressed, u32 cbCompressed, void* pDestBuffer, u32 cbDestBufferSize, u32* nBytesWritten, u32 nDesiredSampleRate) DecompressVoice;
+            public function VoiceResult(ISteamUser* this, u32* pcbCompressed, u32* pcbUncompressed_Deprecated, u32 nUncompressedVoiceDesiredSampleRate_Deprecated) GetAvailableVoice;
+            public function VoiceResult(ISteamUser* this, bool bWantCompressed, void* pDestBuffer, u32 cbDestBufferSize, uint32* nBytesWritten, bool bWantUncompressed_Deprecated, void* pUncompressedDestBuffer_Deprecated, u32 cbUncompressedDestBufferSize_Deprecated, u32* nUncompressBytesWritten_Deprecated, u32 nUncompressedVoiceDesiredSampleRate_Deprecated) GetVoice;
+            public function VoiceResult(ISteamUser* this, void* pCompressed, u32 cbCompressed, void* pDestBuffer, u32 cbDestBufferSize, u32* nBytesWritten, u32 nDesiredSampleRate) DecompressVoice;
             public function u32(ISteamUser* this) GetVoiceOptimalSampleRate;
             public function HAuthTicket(ISteamUser* this, void* pTicket, i32 cbMaxTicket, u32* pcbTicket) GetAuthSessionTicket;
-            public function EBeginAuthSessionResult(ISteamUser* this, void* pAuthTicket, i32 cbAuthTicket, CSteamID steamID) BeginAuthSession;
+            public function BeginAuthSessionResult(ISteamUser* this, void* pAuthTicket, i32 cbAuthTicket, CSteamID steamID) BeginAuthSession;
             public function void(ISteamUser* this, CSteamID steamID) EndAuthSession;
             public function void(ISteamUser* this, HAuthTicket hAuthTicket) CancelAuthTicket;
-            public function EUserHasLicenseForAppResult(ISteamUser* this, CSteamID steamID, AppId_t appId) UserHasLicenseForApp;
+            public function UserHasLicenseForAppResult(ISteamUser* this, CSteamID steamID, AppId_t appId) UserHasLicenseForApp;
             public function bool(ISteamUser* this) BIsBehindNAT;
             public function void(ISteamUser* this, CSteamID steamIDGameServer, u32 unIPServer, u16 usPortServer) AdvertiseGame;
             public function SteamAPICall_t(ISteamUser* this, void* pDataToInclude, i32 cbDataToInclude) RequestEncryptedAppTicket;
@@ -149,11 +144,11 @@ namespace RfgNetworking.API
         {
             public function char8*(ISteamFriends* this) GetPersonaName;
             public function SteamAPICall_t(ISteamFriends* this, char8* pchPersonaName) SetPersonaName;
-            public function EPersonaState(ISteamFriends* this) GetPersonaState;
+            public function PersonaState(ISteamFriends* this) GetPersonaState;
             public function int(ISteamFriends* this, int iFriendFlags) GetFriendCount;
             public function CSteamID(ISteamFriends* this, int iFriend, int iFriendFlags) GetFriendByIndex;
-            public function EFriendRelationship(ISteamFriends* this, CSteamID steamIDFriend) GetFriendRelationship;
-            public function EPersonaState(ISteamFriends* this, CSteamID steamIDFriend) GetFriendPersonaState;
+            public function FriendRelationship(ISteamFriends* this, CSteamID steamIDFriend) GetFriendRelationship;
+            public function PersonaState(ISteamFriends* this, CSteamID steamIDFriend) GetFriendPersonaState;
             public function char8*(ISteamFriends* this, CSteamID steamIDFriend) GetFriendPersonaName;
             public function bool(ISteamFriends* this, CSteamID steamIDFriend, FriendGameInfo_t *pFriendGameInfo) GetFriendGamePlayed;
             public function char8*(ISteamFriends* this, CSteamID steamIDFriend, int iPersonaName) GetFriendPersonaNameHistory;
@@ -178,7 +173,7 @@ namespace RfgNetworking.API
             public function void(ISteamFriends* this, char8* pchDialog) ActivateGameOverlay;
             public function void(ISteamFriends* this, char8* pchDialog, CSteamID steamID) ActivateGameOverlayToUser;
             public function void(ISteamFriends* this, char8* pchURL) ActivateGameOverlayToWebPage;
-            public function void(ISteamFriends* this, AppId_t nAppID, EOverlayToStoreFlag eFlag) ActivateGameOverlayToStore;
+            public function void(ISteamFriends* this, AppId_t nAppID, OverlayToStoreFlag eFlag) ActivateGameOverlayToStore;
             public function void(ISteamFriends* this, CSteamID steamIDUserPlayedWith) SetPlayedWith;
             public function void(ISteamFriends* this, CSteamID steamIDLobby) ActivateGameOverlayInviteDialog;
             public function int(ISteamFriends* this, CSteamID steamIDFriend) GetSmallFriendAvatar;
@@ -206,14 +201,14 @@ namespace RfgNetworking.API
             public function int(ISteamFriends* this, CSteamID steamIDClan) GetClanChatMemberCount;
             public function CSteamID(ISteamFriends* this, CSteamID* __return, CSteamID steamIDClan, int iUser) GetChatMemberByIndex;
             public function bool(ISteamFriends* this, CSteamID steamIDClanChat, char8* pchText) SendClanChatMessage;
-            public function int(ISteamFriends* this, CSteamID steamIDClanChat, int iMessage, void* prgchText, int cchTextMax, EChatEntryType* peChatEntryType, CSteamID* psteamidChatter) GetClanChatMessage;
+            public function int(ISteamFriends* this, CSteamID steamIDClanChat, int iMessage, void* prgchText, int cchTextMax, ChatEntryType* peChatEntryType, CSteamID* psteamidChatter) GetClanChatMessage;
             public function bool(ISteamFriends* this, CSteamID steamIDClanChat, CSteamID steamIDUser) IsClanChatAdmin;
             public function bool(ISteamFriends* this, CSteamID steamIDClanChat) IsClanChatWindowOpenInSteam;
             public function bool(ISteamFriends* this, CSteamID steamIDClanChat) OpenClanChatWindowInSteam;
             public function bool(ISteamFriends* this, CSteamID steamIDClanChat) CloseClanChatWindowInSteam;
             public function bool(ISteamFriends* this, bool bInterceptEnabled) SetListenForFriendsMessages;
             public function bool(ISteamFriends* this, CSteamID steamIDFriend, char8* pchMsgToSend) ReplyToFriendMessage;
-            public function int(ISteamFriends* this, CSteamID steamIDFriend, int iMessageID, void *pvData, int cubData, EChatEntryType* peChatEntryType) GetFriendMessage;
+            public function int(ISteamFriends* this, CSteamID steamIDFriend, int iMessageID, void *pvData, int cubData, ChatEntryType* peChatEntryType) GetFriendMessage;
             public function SteamAPICall_t(ISteamFriends* this, CSteamID steamID) GetFollowerCount;
             public function SteamAPICall_t(ISteamFriends* this, CSteamID steamID) IsFollowing;
             public function SteamAPICall_t(ISteamFriends* this, u32 unStartIndex) EnumerateFollowingList;
@@ -232,7 +227,7 @@ namespace RfgNetworking.API
         {
             public function u32(ISteamUtils* this) GetSecondsSinceAppActive;
             public function u32(ISteamUtils* this) GetSecondsSinceComputerActive;
-            public function EUniverse(ISteamUtils* this) GetConnectedUniverse;
+            public function Universe(ISteamUtils* this) GetConnectedUniverse;
             public function u32(ISteamUtils* this) GetServerRealTime;
             public function char8*(ISteamUtils* this) GetIPCountry;
             public function u8(ISteamUtils* this, i32 iImage, u32* pnWidth, u32* pnHeight) GetImageSize;
@@ -240,9 +235,9 @@ namespace RfgNetworking.API
             public function u8(ISteamUtils* this, u32* unIP, u16* usPort) GetCSERIPPort;
             public function u8(ISteamUtils* this) GetCurrentBatteryPower;
             public function u32(ISteamUtils* this) GetAppID;
-            public function void(ISteamUtils* this, ENotificationPosition eNotificationPosition) SetOverlayNotificationPosition;
+            public function void(ISteamUtils* this, NotificationPosition eNotificationPosition) SetOverlayNotificationPosition;
             public function bool(ISteamUtils* this, SteamAPICall_t hSteamAPICall, bool* pbFailed) IsAPICallCompleted;
-            public function ESteamAPICallFailure(ISteamUtils* this, SteamAPICall_t hSteamAPICall) GetAPICallFailureReason;
+            public function SteamAPICallFailure(ISteamUtils* this, SteamAPICall_t hSteamAPICall) GetAPICallFailureReason;
             public function bool(ISteamUtils* this, SteamAPICall_t hSteamAPICall, void* pCallback, int cubCallback, int iCallbackExpected, bool* pbFailed) GetAPICallResult;
             public function void(ISteamUtils* this) RunFrame;
             public function u32(ISteamUtils* this) GetIPCCallCount;
@@ -250,7 +245,7 @@ namespace RfgNetworking.API
             public function bool(ISteamUtils* this) IsOverlayEnabled;
             public function bool(ISteamUtils* this) BOverlayNeedsPresent;
             public function SteamAPICall_t(ISteamUtils* this, char8* szFileName) CheckFileSignature;
-            public function bool(ISteamUtils* this, EGamepadTextInputMode eInputMode, EGamepadTextInputLineMode eLineInputMode, char8* pchDescription, uint32 unCharMax, char8* pchExistingText) ShowGamepadTextInput;
+            public function bool(ISteamUtils* this, GamepadTextInputMode eInputMode, GamepadTextInputLineMode eLineInputMode, char8* pchDescription, uint32 unCharMax, char8* pchExistingText) ShowGamepadTextInput;
             public function u32(ISteamUtils* this) GetEnteredGamepadTextLength;
             public function bool(ISteamUtils* this, char8* pchText, u32 cchText) GetEnteredGamepadTextInput;
             public function char8*(ISteamUtils* this) GetSteamUILanguage;
@@ -276,15 +271,15 @@ namespace RfgNetworking.API
             public function int(ISteamMatchmaking* this, AppId_t nAppID, uint32 nIP, uint16 nConnPort, uint16 nQueryPort, uint32 unFlags, uint32 rTime32LastPlayedOnServer) AddFavoriteGame;
             public function bool(ISteamMatchmaking* this, AppId_t nAppID, uint32 nIP, uint16 nConnPort, uint16 nQueryPort, uint32 unFlags) RemoveFavoriteGame;
             public function SteamAPICall_t(ISteamMatchmaking* this) RequestLobbyList;
-            public function void(ISteamMatchmaking* this, char8* pchKeyToMatch, char8* pchValueToMatch, ELobbyComparison eComparisonType) AddRequestLobbyListStringFilter;
-            public function void(ISteamMatchmaking* this, char8* pchKeyToMatch, int nValueToMatch, ELobbyComparison eComparisonType) AddRequestLobbyListNumericalFilter;
+            public function void(ISteamMatchmaking* this, char8* pchKeyToMatch, char8* pchValueToMatch, LobbyComparison eComparisonType) AddRequestLobbyListStringFilter;
+            public function void(ISteamMatchmaking* this, char8* pchKeyToMatch, int nValueToMatch, LobbyComparison eComparisonType) AddRequestLobbyListNumericalFilter;
             public function void(ISteamMatchmaking* this, char8* pchKeyToMatch, int nValueToBeCloseTo) AddRequestLobbyListNearValueFilter;
             public function void(ISteamMatchmaking* this, int nSlotsAvailable) AddRequestLobbyListFilterSlotsAvailable;
-            public function void(ISteamMatchmaking* this, ELobbyDistanceFilter eLobbyDistanceFilter) AddRequestLobbyListDistanceFilter;
+            public function void(ISteamMatchmaking* this, LobbyDistanceFilter eLobbyDistanceFilter) AddRequestLobbyListDistanceFilter;
             public function void(ISteamMatchmaking* this, int cMaxResults) AddRequestLobbyListResultCountFilter;
             public function void(ISteamMatchmaking* this, CSteamID steamIDLobby) AddRequestLobbyListCompatibleMembersFilter;
             public function CSteamID*(ISteamMatchmaking* this, CSteamID* __return, int nLobby) GetLobbyByIndex;
-            public function SteamAPICall_t(ISteamMatchmaking* this, ELobbyType eLobbyType, int cMaxMembers) CreateLobby;
+            public function SteamAPICall_t(ISteamMatchmaking* this, LobbyType eLobbyType, int cMaxMembers) CreateLobby;
             public function SteamAPICall_t(ISteamMatchmaking* this, CSteamID steamIDLobby) JoinLobby;
             public function void(ISteamMatchmaking* this, CSteamID steamIDLobby) LeaveLobby;
             public function bool(ISteamMatchmaking* this, CSteamID steamIDLobby, CSteamID steamIDInvitee) InviteUserToLobby;
@@ -298,13 +293,13 @@ namespace RfgNetworking.API
             public function char8*(ISteamMatchmaking* this, CSteamID steamIDLobby, CSteamID steamIDUser, char8* pchKey) GetLobbyMemberData;
             public function void(ISteamMatchmaking* this, CSteamID steamIDLobby, char8* pchKey, char8* pchValue) SetLobbyMemberData;
             public function bool(ISteamMatchmaking* this, CSteamID steamIDLobby, void* pvMsgBody, int cubMsgBody) SendLobbyChatMsg;
-            public function int(ISteamMatchmaking* this, CSteamID steamIDLobby, int iChatID, CSteamID* pSteamIDUser, void* pvData, int cubData, EChatEntryType* peChatEntryType) GetLobbyChatEntry;
+            public function int(ISteamMatchmaking* this, CSteamID steamIDLobby, int iChatID, CSteamID* pSteamIDUser, void* pvData, int cubData, ChatEntryType* peChatEntryType) GetLobbyChatEntry;
             public function bool(ISteamMatchmaking* this, CSteamID steamIDLobby) RequestLobbyData;
             public function void(ISteamMatchmaking* this, CSteamID steamIDLobby, uint32 unGameServerIP, uint16 unGameServerPort, CSteamID steamIDGameServer) SetLobbyGameServer;
             public function bool(ISteamMatchmaking* this, CSteamID steamIDLobby, uint32 *punGameServerIP, uint16 *punGameServerPort, CSteamID *psteamIDGameServer) GetLobbyGameServer;
             public function bool(ISteamMatchmaking* this, CSteamID steamIDLobby, int cMaxMembers) SetLobbyMemberLimit;
             public function int(ISteamMatchmaking* this, CSteamID steamIDLobby) GetLobbyMemberLimit;
-            public function bool(ISteamMatchmaking* this, CSteamID steamIDLobby, ELobbyType eLobbyType) SetLobbyType;
+            public function bool(ISteamMatchmaking* this, CSteamID steamIDLobby, LobbyType eLobbyType) SetLobbyType;
             public function bool(ISteamMatchmaking* this, CSteamID steamIDLobby, bool bLobbyJoinable) SetLobbyJoinable;
             public function CSteamID(ISteamMatchmaking* this, CSteamID* __return, CSteamID steamIDLobby) GetLobbyOwner;
             public function bool(ISteamMatchmaking* this, CSteamID steamIDLobby, CSteamID steamIDNewOwner) SetLobbyOwner;
@@ -342,16 +337,16 @@ namespace RfgNetworking.API
             public function bool(ISteamUserStats* this, CSteamID steamIDUser, char8* pchName, u8* pbAchieved) GetUserAchievement;
             public function bool(ISteamUserStats* this, CSteamID steamIDUser, char8* pchName, u8* pbAchieved, u32* punUnlockTime) GetUserAchievementAndUnlockTime;
             public function bool(ISteamUserStats* this, u8 bAchievementsToo) ResetAllStats;
-            public function SteamAPICall_t(ISteamUserStats* this, char8* pchLeaderboardName, ELeaderboardSortMethod eLeaderboardSortMethod, ELeaderboardDisplayType eLeaderboardDisplayType) FindOrCreateLeaderboard;
+            public function SteamAPICall_t(ISteamUserStats* this, char8* pchLeaderboardName, LeaderboardSortMethod eLeaderboardSortMethod, LeaderboardDisplayType eLeaderboardDisplayType) FindOrCreateLeaderboard;
             public function SteamAPICall_t(ISteamUserStats* this, char8* pchLeaderboardName) FindLeaderboard;
             public function char8*(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard) GetLeaderboardName;
             public function int(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard) GetLeaderboardEntryCount;
-            public function ELeaderboardSortMethod(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard) GetLeaderboardSortMethod;
-            public function ELeaderboardDisplayType(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard) GetLeaderboardDisplayType;
-            public function SteamAPICall_t(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard, ELeaderboardDataRequest eLeaderboardDataRequest, int nRangeStart, int nRangeEnd) DownloadLeaderboardEntries;
+            public function LeaderboardSortMethod(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard) GetLeaderboardSortMethod;
+            public function LeaderboardDisplayType(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard) GetLeaderboardDisplayType;
+            public function SteamAPICall_t(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard, LeaderboardDataRequest eLeaderboardDataRequest, int nRangeStart, int nRangeEnd) DownloadLeaderboardEntries;
             public function SteamAPICall_t(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard, CSteamID* prgUsers, int cUsers) DownloadLeaderboardEntriesForUsers;
             public function bool(ISteamUserStats* this, SteamLeaderboardEntries_t hSteamLeaderboardEntries, int index, LeaderboardEntry_t *pLeaderboardEntry, int32 *pDetails, int cDetailsMax) GetDownloadedLeaderboardEntry;
-            public function SteamAPICall_t(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard, ELeaderboardUploadScoreMethod eLeaderboardUploadScoreMethod, int32 nScore, int32* pScoreDetails, int cScoreDetailsCount) UploadLeaderboardScore;
+            public function SteamAPICall_t(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard, LeaderboardUploadScoreMethod eLeaderboardUploadScoreMethod, int32 nScore, int32* pScoreDetails, int cScoreDetailsCount) UploadLeaderboardScore;
             public function SteamAPICall_t(ISteamUserStats* this, SteamLeaderboard_t hSteamLeaderboard, UGCHandle_t hUGC) AttachLeaderboardUGC;
             public function SteamAPICall_t(ISteamUserStats* this) GetNumberOfCurrentPlayers;
             public function SteamAPICall_t(ISteamUserStats* this) RequestGlobalAchievementPercentages;
@@ -411,7 +406,7 @@ namespace RfgNetworking.API
         [CRepr]
         public struct VTable
         {
-            public function bool(ISteamNetworking* this, CSteamID steamIDRemote, void* pubData, u32 cubData, EP2PSend eP2PSendType, i32 nChannel) SendP2PPacket;
+            public function bool(ISteamNetworking* this, CSteamID steamIDRemote, void* pubData, u32 cubData, P2PSend eP2PSendType, i32 nChannel) SendP2PPacket;
             public function bool(ISteamNetworking* this, u32* pcubMsgSize, i32 nChannel) IsP2PPacketAvailable;;
             public function bool(ISteamNetworking* this, void* pubDest, u32 cubDest, u32* pcubMsgSize, CSteamID* psteamIDRemote, i32 nChannel) ReadP2PPacket;
             public function bool(ISteamNetworking* this, CSteamID steamIDRemote) AcceptP2PSessionWithUser;
@@ -431,7 +426,7 @@ namespace RfgNetworking.API
             public function bool(ISteamNetworking* this, SNetListenSocket_t hListenSocket, void* pubDest, uint32 cubDest, uint32* pcubMsgSize, SNetSocket_t* phSocket) RetrieveData;
             public function bool(ISteamNetworking* this, SNetSocket_t hSocket, CSteamID* pSteamIDRemote, int* peSocketStatus, uint32* punIPRemote, uint16* punPortRemote) GetSocketInfo;
             public function bool(ISteamNetworking* this, SNetListenSocket_t hListenSocket, uint32* pnIP, uint16* pnPort) GetListenSocketInfo;
-            public function ESNetSocketConnectionType(ISteamNetworking* this, SNetSocket_t hSocket) GetSocketConnectionType;
+            public function SNetSocketConnectionType(ISteamNetworking* this, SNetSocket_t hSocket) GetSocketConnectionType;
             public function int(ISteamNetworking* this, SNetSocket_t hSocket) GetMaxPacketSize;
         }
     }
@@ -452,7 +447,7 @@ namespace RfgNetworking.API
             public function bool(ISteamRemoteStorage* this, char8* pchFile) FileForget;
             public function bool(ISteamRemoteStorage* this, char8* pchFile) FileDelete;
             public function SteamAPICall_t(ISteamRemoteStorage* this, char8* pchFile) FileShare;
-            public function bool(ISteamRemoteStorage* this, char8* pchFile, ERemoteStoragePlatform eRemoteStoragePlatform) SetSyncPlatforms;
+            public function bool(ISteamRemoteStorage* this, char8* pchFile, RemoteStoragePlatform eRemoteStoragePlatform) SetSyncPlatforms;
             public function UGCFileWriteStreamHandle_t(ISteamRemoteStorage* this, char8* pchFile) FileWriteStreamOpen;
             public function bool(ISteamRemoteStorage* this, UGCFileWriteStreamHandle_t writeHandle, void* pvData, int32 cubData) FileWriteStreamWriteChunk;
             public function bool(ISteamRemoteStorage* this, UGCFileWriteStreamHandle_t writeHandle) FileWriteStreamClose;
@@ -461,7 +456,7 @@ namespace RfgNetworking.API
             public function bool(ISteamRemoteStorage* this, char8* pchFile) FilePersisted;
             public function i32(ISteamRemoteStorage* this, char8* pchFile) GetFileSize;
             public function i64(ISteamRemoteStorage* this, char8* pchFile) GetFileTimestamp;
-            public function ERemoteStoragePlatform(ISteamRemoteStorage* this, char8* pchFile) GetSyncPlatforms;
+            public function RemoteStoragePlatform(ISteamRemoteStorage* this, char8* pchFile) GetSyncPlatforms;
             public function i32(ISteamRemoteStorage* this) GetFileCount;
             public function char8*(ISteamRemoteStorage* this, i32 iFile, i32* pnFileSizeInBytes) GetFileNameAndSize;
             public function bool(ISteamRemoteStorage* this, u64* pnTotalBytes, u64* puAvailableBytes) GetQuota;
@@ -471,16 +466,16 @@ namespace RfgNetworking.API
             public function SteamAPICall_t(ISteamRemoteStorage* this, UGCHandle_t hContent, uint32 unPriority) UGCDownload;
             public function bool(ISteamRemoteStorage* this, UGCHandle_t hContent, int32* pnBytesDownloaded, int32* pnBytesExpected) GetUGCDownloadProgress;
             public function bool(ISteamRemoteStorage* this, UGCHandle_t hContent, AppId_t* pnAppID, char8** ppchName, int32* pnFileSizeInBytes, CSteamID* pSteamIDOwner) GetUGCDetails;
-            public function i32(ISteamRemoteStorage* this, UGCHandle_t hContent, void *pvData, int32 cubDataToRead, uint32 cOffset, EUGCReadAction eAction) UGCRead;
+            public function i32(ISteamRemoteStorage* this, UGCHandle_t hContent, void *pvData, int32 cubDataToRead, uint32 cOffset, UGCReadAction eAction) UGCRead;
             public function i32(ISteamRemoteStorage* this) GetCachedUGCCount;
             public function UGCHandle_t(ISteamRemoteStorage* this, i32 iCachedContent) GetCachedUGCHandle;
-            public function SteamAPICall_t(ISteamRemoteStorage* this, char8* pchFile, char8* pchPreviewFile, AppId_t nConsumerAppId, char8* pchTitle, char8* pchDescription, ERemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray_t* pTags, EWorkshopFileType eWorkshopFileType) PublishWorkshopFile;
+            public function SteamAPICall_t(ISteamRemoteStorage* this, char8* pchFile, char8* pchPreviewFile, AppId_t nConsumerAppId, char8* pchTitle, char8* pchDescription, RemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray_t* pTags, WorkshopFileType eWorkshopFileType) PublishWorkshopFile;
             public function PublishedFileUpdateHandle_t(ISteamRemoteStorage* this, PublishedFileId_t unPublishedFileId) CreatePublishedFileUpdateRequest;
             public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle_t updateHandle, char8* pchFile) UpdatePublishedFileFile;
             public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle_t updateHandle, char8* pchPreviewFile) UpdatePublishedFilePreviewFile;
             public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle_t updateHandle, char8* pchTitle) UpdatePublishedFileTitle;
             public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle_t updateHandle, char8* pchDescription) UpdatePublishedFileDescription;
-            public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle_t updateHandle, ERemoteStoragePublishedFileVisibility eVisibility) UpdatePublishedFileVisibility;
+            public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle_t updateHandle, RemoteStoragePublishedFileVisibility eVisibility) UpdatePublishedFileVisibility;
             public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle_t updateHandle, SteamParamStringArray_t *pTags) UpdatePublishedFileTags;
             public function SteamAPICall_t(ISteamRemoteStorage* this, PublishedFileUpdateHandle_t updateHandle) CommitPublishedFileUpdate;
             public function SteamAPICall_t(ISteamRemoteStorage* this, PublishedFileId_t unPublishedFileId, uint32 unMaxSecondsOld) GetPublishedFileDetails;
@@ -494,10 +489,10 @@ namespace RfgNetworking.API
             public function SteamAPICall_t(ISteamRemoteStorage* this, PublishedFileId_t unPublishedFileId, bool bVoteUp) UpdateUserPublishedItemVote;
             public function SteamAPICall_t(ISteamRemoteStorage* this, PublishedFileId_t unPublishedFileId) GetUserPublishedItemVoteDetails;
             public function SteamAPICall_t(ISteamRemoteStorage* this, CSteamID steamId, uint32 unStartIndex, SteamParamStringArray_t* pRequiredTags, SteamParamStringArray_t* pExcludedTags) EnumerateUserSharedWorkshopFiles;
-            public function SteamAPICall_t(ISteamRemoteStorage* this, EWorkshopVideoProvider eVideoProvider, char8* pchVideoAccount, char8* pchVideoIdentifier, char8* pchPreviewFile, AppId_t nConsumerAppId, char8* pchTitle, char8* pchDescription, ERemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray_t* pTags) PublishVideo;
-            public function SteamAPICall_t(ISteamRemoteStorage* this, PublishedFileId_t unPublishedFileId, EWorkshopFileAction eAction) SetUserPublishedFileAction;
-            public function SteamAPICall_t(ISteamRemoteStorage* this, EWorkshopFileAction eAction, uint32 unStartIndex) EnumeratePublishedFilesByUserAction;
-            public function SteamAPICall_t(ISteamRemoteStorage* this, EWorkshopEnumerationType eEnumerationType, uint32 unStartIndex, uint32 unCount, uint32 unDays, SteamParamStringArray_t* pTags, SteamParamStringArray_t* pUserTags) EnumeratePublishedWorkshopFiles;
+            public function SteamAPICall_t(ISteamRemoteStorage* this, WorkshopVideoProvider eVideoProvider, char8* pchVideoAccount, char8* pchVideoIdentifier, char8* pchPreviewFile, AppId_t nConsumerAppId, char8* pchTitle, char8* pchDescription, RemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray_t* pTags) PublishVideo;
+            public function SteamAPICall_t(ISteamRemoteStorage* this, PublishedFileId_t unPublishedFileId, WorkshopFileAction eAction) SetUserPublishedFileAction;
+            public function SteamAPICall_t(ISteamRemoteStorage* this, WorkshopFileAction eAction, uint32 unStartIndex) EnumeratePublishedFilesByUserAction;
+            public function SteamAPICall_t(ISteamRemoteStorage* this, WorkshopEnumerationType eEnumerationType, uint32 unStartIndex, uint32 unCount, uint32 unDays, SteamParamStringArray_t* pTags, SteamParamStringArray_t* pUserTags) EnumeratePublishedWorkshopFiles;
             public function SteamAPICall_t(ISteamRemoteStorage* this, UGCHandle_t hContent, char8* pchLocation, uint32 unPriority) UGCDownloadToLocation;
         }
     }
@@ -524,13 +519,13 @@ namespace RfgNetworking.API
             public function int(ISteamController* this, ControllerHandle_t controllerHandle, ControllerActionSetHandle_t *handlesOut) GetActiveActionSetLayers;
             public function ControllerDigitalActionHandle_t(ISteamController* this, char8* pszActionName) GetDigitalActionHandle;
             public function ControllerDigitalActionData_t(ISteamController* this, ControllerDigitalActionData_t* __return, ControllerHandle_t controllerHandle, ControllerDigitalActionHandle_t digitalActionHandle) GetDigitalActionData;
-            public function int(ISteamController* this, ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle, ControllerDigitalActionHandle_t digitalActionHandle, EControllerActionOrigin* originsOut) GetDigitalActionOrigins;
+            public function int(ISteamController* this, ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle, ControllerDigitalActionHandle_t digitalActionHandle, ControllerActionOrigin* originsOut) GetDigitalActionOrigins;
             public function ControllerAnalogActionHandle_t(ISteamController* this, char8* pszActionName) GetAnalogActionHandle;
             public function ControllerAnalogActionData_t(ISteamController* this, ControllerAnalogActionData_t* __return, ControllerHandle_t controllerHandle, ControllerAnalogActionHandle_t analogActionHandle) GetAnalogActionData;
-            public function int(ISteamController* this, ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle, ControllerAnalogActionHandle_t analogActionHandle, EControllerActionOrigin* originsOut) GetAnalogActionOrigins;
+            public function int(ISteamController* this, ControllerHandle_t controllerHandle, ControllerActionSetHandle_t actionSetHandle, ControllerAnalogActionHandle_t analogActionHandle, ControllerActionOrigin* originsOut) GetAnalogActionOrigins;
             public function void(ISteamController* this, ControllerHandle_t controllerHandle, ControllerAnalogActionHandle_t eAction) StopAnalogActionMomentum;
-            public function void(ISteamController* this, ControllerHandle_t controllerHandle, ESteamControllerPad eTargetPad, c_ushort usDurationMicroSec) TriggerHapticPulse;
-            public function void(ISteamController* this, ControllerHandle_t controllerHandle, ESteamControllerPad eTargetPad, c_ushort usDurationMicroSec, c_ushort usOffMicroSec, c_ushort unRepeat, c_uint nFlags) TriggerRepeatedHapticPulse;
+            public function void(ISteamController* this, ControllerHandle_t controllerHandle, SteamControllerPad eTargetPad, c_ushort usDurationMicroSec) TriggerHapticPulse;
+            public function void(ISteamController* this, ControllerHandle_t controllerHandle, SteamControllerPad eTargetPad, c_ushort usDurationMicroSec, c_ushort usOffMicroSec, c_ushort unRepeat, c_uint nFlags) TriggerRepeatedHapticPulse;
             public function void(ISteamController* this, ControllerHandle_t controllerHandle, c_ushort usLeftSpeed, c_ushort usRightSpeed) TriggerVibration;
             public function void(ISteamController* this, ControllerHandle_t controllerHandle, uint8 nColorR, uint8 nColorG, uint8 nColorB, c_uint nFlags) SetLEDColor;
             public function int(ISteamController* this, ControllerHandle_t ulControllerHandle) GetGamepadIndexForController;
@@ -538,9 +533,9 @@ namespace RfgNetworking.API
             public function ControllerMotionData_t(ISteamController* this, ControllerMotionData_t* __return, ControllerHandle_t controllerHandle) GetMotionData;
             public function bool(ISteamController* this, ControllerHandle_t controllerHandle, ControllerDigitalActionHandle_t digitalActionHandle, float flScale, float flXPosition, float flYPosition) ShowDigitalActionOrigins;
             public function bool(ISteamController* this, ControllerHandle_t controllerHandle, ControllerAnalogActionHandle_t analogActionHandle, float flScale, float flXPosition, float flYPosition) ShowAnalogActionOrigins;
-            public function char8*(ISteamController* this, EControllerActionOrigin eOrigin) GetStringForActionOrigin;
-            public function char8*(ISteamController* this, EControllerActionOrigin eOrigin) GetGlyphForActionOrigin;
-            public function ESteamInputType(ISteamController* this, ControllerHandle_t controllerHandle) GetInputTypeForHandle;
+            public function char8*(ISteamController* this, ControllerActionOrigin eOrigin) GetStringForActionOrigin;
+            public function char8*(ISteamController* this, ControllerActionOrigin eOrigin) GetGlyphForActionOrigin;
+            public function SteamInputType(ISteamController* this, ControllerHandle_t controllerHandle) GetInputTypeForHandle;
         }
     }
 
@@ -637,27 +632,12 @@ namespace RfgNetworking.API
     	u8 m_nCallbackFlags;
     	i32 m_iCallback;
 
-        public static void Run(CCallbackBase* self, void* param0, bool param1, u64 param2)
-        {
-
-        }
-
-        public static void Run2(CCallbackBase* self, void* param0)
-        {
-
-        }
-
-        public static i32 GetCallbackSizeBytes(CCallbackBase* self)
-        {
-            return 0;
-        }
-
         [CRepr]
         public struct VTable
         {
-            public function void(CCallbackBase* self, void* param0, bool param1, u64 param2) Run = => CCallbackBase.Run;
-            public function void(CCallbackBase* self, void* param0) Run2 = => CCallbackBase.Run2;
-            public function i32(CCallbackBase* self) GetCallbackSizeBytes = => CCallbackBase.GetCallbackSizeBytes;
+            public function void(CCallbackBase* this, void* param0, bool param1, u64 param2) Run;
+            public function void(CCallbackBase* this, void* param0) Run2;
+            public function i32(CCallbackBase* this) GetCallbackSizeBytes;
         }
     }
 
@@ -666,6 +646,11 @@ namespace RfgNetworking.API
     {
 
     }
+
+    typealias HSteamPipe = i32;
+    typealias HSteamUser = i32;
+    typealias AppId_t = u32;
+    typealias SteamAPICall_t = u64;
 
     typealias CSteamID = u64;
     /*[CRepr]
@@ -746,247 +731,508 @@ namespace RfgNetworking.API
 	[CRepr]
 	public struct ControllerDigitalActionData_t
 	{
-	
+	    public bool bState;
+        public bool bActive;
 	}
 	
 	[CRepr]
 	public struct ControllerAnalogActionData_t
 	{
-	
+	    public ControllerSourceMode eMode;
+        public f32 x;
+        public f32 y;
+        public bool bActive;
 	}
 	
 	[CRepr]
 	public struct ControllerMotionData_t
 	{
-	
+	    public f32 rotQuatX;
+        public f32 rotQuatY;
+        public f32 rotQuatZ;
+        public f32 rotQuatW;
+        public f32 postAccelX;
+        public f32 postAccelY;
+        public f32 postAccelZ;
+        public f32 rotVelX;
+        public f32 rotVelY;
+        public f32 rotVelZ;
 	}
 
-    public enum EAccountType
+    public enum AccountType
     {
-    	k_EAccountTypeInvalid = 0,
-    	k_EAccountTypeIndividual = 1,
-    	k_EAccountTypeMultiseat = 2,
-    	k_EAccountTypeGameServer = 3,
-    	k_EAccountTypeAnonGameServer = 4,
-    	k_EAccountTypePending = 5,
-    	k_EAccountTypeContentServer = 6,
-    	k_EAccountTypeClan = 7,
-    	k_EAccountTypeChat = 8,
-    	k_EAccountTypeConsoleUser = 9,
-    	k_EAccountTypeAnonUser = 10,
-    	k_EAccountTypeMax = 11
+    	Invalid = 0,
+    	Individual = 1,
+    	Multiseat = 2,
+    	GameServer = 3,
+    	AnonGameServer = 4,
+    	Pending = 5,
+    	ContentServer = 6,
+    	Clan = 7,
+    	Chat = 8,
+    	ConsoleUser = 9,
+    	AnonUser = 10,
+    	Max = 11
     }
 
-    public enum EVoiceResult
+    public enum VoiceResult
     {
-        k_EVoiceResultOK = 0,
-        k_EVoiceResultNotInitialized = 1,
-        k_EVoiceResultNotRecording = 2,
-        k_EVoiceResultNoData = 3,
-        k_EVoiceResultBufferTooSmall = 4,
-        k_EVoiceResultDataCorrupted = 5,
-        k_EVoiceResultRestricted = 6,
-        k_EVoiceResultUnsupportedCodec = 7,
-        k_EVoiceResultReceiverOutOfDate = 8,
-        k_EVoiceResultReceiverDidNotAnswer = 9
+        OK = 0,
+        NotInitialized = 1,
+        NotRecording = 2,
+        NoData = 3,
+        BufferTooSmall = 4,
+        DataCorrupted = 5,
+        Restricted = 6,
+        UnsupportedCodec = 7,
+        ReceiverOutOfDate = 8,
+        ReceiverDidNotAnswer = 9
     }
 
-    public enum EBeginAuthSessionResult
+    public enum BeginAuthSessionResult
     {
-        k_EBeginAuthSessionResultOK = 0,
-        k_EBeginAuthSessionResultInvalidTicket = 1,
-        k_EBeginAuthSessionResultDuplicateRequest = 2,
-        k_EBeginAuthSessionResultInvalidVersion = 3,
-        k_EBeginAuthSessionResultGameMismatch = 4,
-        k_EBeginAuthSessionResultExpiredTicket = 5
+        OK = 0,
+        InvalidTicket = 1,
+        DuplicateRequest = 2,
+        InvalidVersion = 3,
+        GameMismatch = 4,
+        ExpiredTicket = 5
     }
 
-    public enum EUserHasLicenseForAppResult
+    public enum UserHasLicenseForAppResult
     {
-        k_EUserHasLicenseResultHasLicense = 0,
-        k_EUserHasLicenseResultDoesNotHaveLicense = 1,
-        k_EUserHasLicenseResultNoAuth = 2,
+        HasLicense = 0,
+        DoesNotHaveLicense = 1,
+        NoAuth = 2,
     }
 
-    public enum EP2PSend
+    public enum P2PSend
     {
-        k_EP2PSendUnreliable = 0,
-        k_EP2PSendUnreliableNoDelay = 1,
-        k_EP2PSendReliable = 2,
-        k_EP2PSendReliableWithBuffering = 3
+        Unreliable = 0,
+        UnreliableNoDelay = 1,
+        Reliable = 2,
+        ReliableWithBuffering = 3
     }
 
-    public enum EOverlayToStoreFlag
+    public enum OverlayToStoreFlag
     {
-        k_EOverlayToStoreFlag_None = 0,
-        k_EOverlayToStoreFlag_AddToCart = 1,
-        k_EOverlayToStoreFlag_AddToCartAndShow = 2,
+        None = 0,
+        AddToCart = 1,
+        AddToCartAndShow = 2,
     }
 
-    public enum EChatEntryType
+    public enum ChatEntryType
     {
-        k_EChatEntryTypeInvalid = 0,
-	    k_EChatEntryTypeChatMsg = 1,
-	    k_EChatEntryTypeTyping = 2,
-	    k_EChatEntryTypeInviteGame = 3,
-	    k_EChatEntryTypeEmote = 4,
-	    k_EChatEntryTypeLeftConversation = 6,
-	    k_EChatEntryTypeEntered = 7,
-	    k_EChatEntryTypeWasKicked = 8,
-	    k_EChatEntryTypeWasBanned = 9,
-	    k_EChatEntryTypeDisconnected = 10,
-	    k_EChatEntryTypeHistoricalChat = 11,
-	    k_EChatEntryTypeLinkBlocked	= 14
+        Invalid = 0,
+	    ChatMsg = 1,
+	    Typing = 2,
+	    InviteGame = 3,
+	    Emote = 4,
+	    LeftConversation = 6,
+	    Entered = 7,
+	    WasKicked = 8,
+	    WasBanned = 9,
+	    Disconnected = 10,
+	    HistoricalChat = 11,
+	    LinkBlocked	= 14
     }
 
-    public enum EPersonaState
+    public enum PersonaState
     {
-        k_EPersonaStateOffline = 0,
-	    k_EPersonaStateOnline = 1,
-	    k_EPersonaStateBusy = 2,
-	    k_EPersonaStateAway = 3,
-	    k_EPersonaStateSnooze = 4,
-	    k_EPersonaStateLookingToTrade = 5,
-	    k_EPersonaStateLookingToPlay = 6,
-	    k_EPersonaStateMax = 7
+        Offline = 0,
+	    Online = 1,
+	    Busy = 2,
+	    Away = 3,
+	    Snooze = 4,
+	    LookingToTrade = 5,
+	    LookingToPlay = 6,
+	    Max = 7
     }
 
-    public enum EFriendRelationship
+    public enum FriendRelationship
     {
-        k_EFriendRelationshipNone = 0,
-	    k_EFriendRelationshipBlocked = 1,
-	    k_EFriendRelationshipRequestRecipient = 2,
-	    k_EFriendRelationshipFriend	= 3,
-	    k_EFriendRelationshipRequestInitiator = 4,
-	    k_EFriendRelationshipIgnored = 5,
-	    k_EFriendRelationshipIgnoredFriend = 6,
-	    k_EFriendRelationshipSuggested_DEPRECATED = 7,
-	    k_EFriendRelationshipMax = 8,
+        None = 0,
+	    Blocked = 1,
+	    RequestRecipient = 2,
+	    Friend	= 3,
+	    RequestInitiator = 4,
+	    Ignored = 5,
+	    IgnoredFriend = 6,
+	    Suggested_DEPRECATED = 7,
+	    Max = 8,
     }
 
-    public enum ESteamAPICallFailure
+    public enum SteamAPICallFailure
     {
-		k_ESteamAPICallFailureNone = -1,
-        k_ESteamAPICallFailureSteamGone = 0,
-        k_ESteamAPICallFailureNetworkFailure = 1,
-        k_ESteamAPICallFailureInvalidHandle = 2,
-        k_ESteamAPICallFailureMismatchedCallback = 3
+		None = -1,
+        SteamGone = 0,
+        NetworkFailure = 1,
+        InvalidHandle = 2,
+        MismatchedCallback = 3
     }
 
-    public enum EUniverse
+    public enum Universe
     {
-        k_EUniverseInvalid = 0,
-	    k_EUniversePublic = 1,
-	    k_EUniverseBeta = 2,
-	    k_EUniverseInternal = 3,
-	    k_EUniverseDev = 4,
-	    k_EUniverseMax = 5
+        Invalid = 0,
+	    Public = 1,
+	    Beta = 2,
+	    Internal = 3,
+	    Dev = 4,
+	    Max = 5
     }
 
-    public enum ENotificationPosition
+    public enum NotificationPosition
     {
-
+        TopLeft = 0,
+        TopRight = 1,
+        BottomLeft = 2,
+        BottomRight = 3
     }
 	
-	public enum ELobbyComparison
+	public enum LobbyComparison
 	{
-	
+	    EqualToOrLessThan = -2,
+        LessThan = -1,
+        Equal = 0,
+        GreaterThan = 1,
+        EqualToOrGreaterThan = 2,
+        NotEqual = 3
 	}
 	
-	public enum ELobbyDistanceFilter
+	public enum LobbyDistanceFilter
 	{
-	
+	    Close = 0,
+        Default = 1,
+        Far = 2,
+        Worldwide = 3
 	}
 	
-	public enum ELobbyType
+	public enum LobbyType
 	{
-	
+	    Private = 0,
+        FriendsOnly = 1,
+        Public = 2,
+        Invisible = 3
 	}
 	
-	public enum ELeaderboardSortMethod
+	public enum LeaderboardSortMethod
 	{
-	
+	    None = 0,
+        Ascending = 1,
+        Descending = 2
 	}
 	
-	public enum ELeaderboardDisplayType
+	public enum LeaderboardDisplayType
 	{
-	
+	    None = 0,
+        Numeric = 1,
+        TimeSeconds = 2,
+        TimeMilliSeconds = 3
 	}
 	
-	public enum ELeaderboardDataRequest
+	public enum LeaderboardDataRequest
 	{
-	
+	    Global = 0,
+        GlobalAroundUser = 1,
+        Friends = 2,
+        Users = 3
 	}
 	
-	public enum ELeaderboardUploadScoreMethod
+	public enum LeaderboardUploadScoreMethod
 	{
-	
+	    None = 0,
+        KeepBest = 1,
+        ForceUpdate = 2
 	}
 
-    public enum EGamepadTextInputMode
+    public enum GamepadTextInputMode
 	{
-
+        Normal = 0,
+        Password = 1
 	}
 
-	public enum EGamepadTextInputLineMode
+	public enum GamepadTextInputLineMode
     {
-
+        SingleLine = 0,
+        MultipleLines = 1
     }
 
-    public enum ESNetSocketConnectionType
+    public enum SNetSocketConnectionType
     {
-        k_ESNetSocketConnectionTypeNotConnected = 0,
-        k_ESNetSocketConnectionTypeUDP = 1,
-        k_ESNetSocketConnectionTypeUDPRelay = 2
+        NotConnected = 0,
+        UDP = 1,
+        UDPRelay = 2
     }
 	
-	public enum ERemoteStoragePlatform
+	public enum RemoteStoragePlatform
 	{
-	
+	    None = 0,
+        Windows = 1 << 0,
+        OSX = 1 << 1,
+        PS3 = 1 << 2,
+        Linux = 1 << 3,
+        Reserved2 = 1 << 4,
+        All = 0xFFFFFFFF
 	}
 	
-	public enum EUGCReadAction
+	public enum UGCReadAction
 	{
-	
+	    ContinueReadingUntilFinished = 0,
+        ContinueReading = 1,
+        Close = 2
 	}
 	
-	public enum ERemoteStoragePublishedFileVisibility
+	public enum RemoteStoragePublishedFileVisibility
 	{
-	
+	    Public = 0,
+        FriendsOnly = 1,
+        Private = 2,
+        Unlisted = 3
+	}
+
+    [AllowDuplicates]
+	public enum WorkshopFileType
+	{
+	    First = 0,
+        Community = 0,
+        Microtransaction = 1,
+        Collection = 2,
+        Art = 3,
+        Video = 4,
+        Screenshot = 5,
+        Game = 6,
+        Software = 7,
+        Concept = 8,
+        WebGuide = 9,
+        IntegratedGuide = 10,
+        Merch = 11,
+        ControllerBinding = 12,
+        SteamworksAccessInvite = 13,
+        SteamVideo = 14,
+        GameManagedItem = 15,
+        Max = 16
 	}
 	
-	public enum EWorkshopFileType
+	public enum WorkshopVideoProvider
 	{
-	
+	    None = 0,
+        YouTube = 1
 	}
 	
-	public enum EWorkshopVideoProvider
+	public enum WorkshopFileAction
 	{
-	
+	    Played = 0,
+        Completed = 1
 	}
 	
-	public enum EWorkshopFileAction
+	public enum WorkshopEnumerationType
 	{
-	
+	    RankedByVote = 0,
+        Recent = 1,
+        Trending = 2,
+        FavoritesOfFriends = 3,
+        VotedByFriends = 4,
+        ContentByFriends = 5,
+        RecentFromFollowedUsers = 6
 	}
 	
-	public enum EWorkshopEnumerationType
+	public enum ControllerActionOrigin
 	{
-	
+	    None = 0,
+        A = 1,
+        B = 2,
+        X = 3,
+        Y = 4,
+        LeftBumper = 5,
+        RightBumper = 6,
+        LeftGrip = 7,
+        RightGrip = 8,
+        Start = 9,
+        Back = 10,
+        LeftPad_Touch = 11,
+        LeftPad_Swipe = 12,
+        LeftPad_Click = 13,
+        LeftPad_DPadNorth = 14,
+        LeftPad_DPadSouth = 15,
+        LeftPad_DPadWest = 16,
+        LeftPad_DPadEast = 17,
+        RightPad_Touch = 18,
+        RightPad_Swipe = 19,
+        RightPad_Click = 20,
+        RightPad_DPadNorth = 21,
+        RightPad_DPadSouth = 22,
+        RightPad_DPadWest = 23,
+        RightPad_DPadEast = 24,
+        LeftTrigger_Pull = 25,
+        LeftTrigger_Click = 26,
+        RightTrigger_Pull = 27,
+        RightTrigger_Click = 28,
+        LeftStick_Move = 29,
+        LeftStick_Click = 30,
+        LeftStick_DPadNorth = 31,
+        LeftStick_DPadSouth = 32,
+        LeftStick_DPadWest = 33,
+        LeftStick_DPadEast = 34,
+        Gyro_Move = 35,
+        Gyro_Pitch = 36,
+        Gyro_Yaw = 37,
+        Gyro_Roll = 38,
+        PS4_X = 39,
+        PS4_Circle = 40,
+        PS4_Triangle = 41,
+        PS4_Square = 42,
+        PS4_LeftBumper = 43,
+        PS4_RightBumper = 44,
+        PS4_Options = 45,
+        PS4_Share = 46,
+        PS4_LeftPad_Touch = 47,
+        PS4_LeftPad_Swipe = 48,
+        PS4_LeftPad_Click = 49,
+        PS4_LeftPad_DPadNorth = 50,
+        PS4_LeftPad_DPadSouth = 51,
+        PS4_LeftPad_DPadWest = 52,
+        PS4_LeftPad_DPadEast = 53,
+        PS4_RightPad_Touch = 54,
+        PS4_RightPad_Swipe = 55,
+        PS4_RightPad_Click = 56,
+        PS4_RightPad_DPadNorth = 57,
+        PS4_RightPad_DPadSouth = 58,
+        PS4_RightPad_DPadWest = 59,
+        PS4_RightPad_DPadEast = 60,
+        PS4_CenterPad_Touch = 61,
+        PS4_CenterPad_Swipe = 62,
+        PS4_CenterPad_Click = 63,
+        PS4_CenterPad_DPadNorth = 64,
+        PS4_CenterPad_DPadSouth = 65,
+        PS4_CenterPad_DPadWest = 66,
+        PS4_CenterPad_DPadEast = 67,
+        PS4_LeftTrigger_Pull = 68,
+        PS4_LeftTrigger_Click = 69,
+        PS4_RightTrigger_Pull = 70,
+        PS4_RightTrigger_Click = 71,
+        PS4_LeftStick_Move = 72,
+        PS4_LeftStick_Click = 73,
+        PS4_LeftStick_DPadNorth = 74,
+        PS4_LeftStick_DPadSouth = 75,
+        PS4_LeftStick_DPadWest = 76,
+        PS4_LeftStick_DPadEast = 77,
+        PS4_RightStick_Move = 78,
+        PS4_RightStick_Click = 79,
+        PS4_RightStick_DPadNorth = 80,
+        PS4_RightStick_DPadSouth = 81,
+        PS4_RightStick_DPadWest = 82,
+        PS4_RightStick_DPadEast = 83,
+        PS4_DPad_North = 84,
+        PS4_DPad_South = 85,
+        PS4_DPad_West = 86,
+        PS4_DPad_East = 87,
+        PS4_Gyro_Move = 88,
+        PS4_Gyro_Pitch = 89,
+        PS4_Gyro_Yaw = 90,
+        PS4_Gyro_Roll = 91,
+        XBoxOne_A = 92,
+        XBoxOne_B = 93,
+        XBoxOne_X = 94,
+        XBoxOne_Y = 95,
+        XBoxOne_LeftBumper = 96,
+        XBoxOne_RightBumper = 97,
+        XBoxOne_Menu = 98,
+        XBoxOne_View = 99,
+        XBoxOne_LeftTrigger_Pull= 100,
+        XBoxOne_LeftTrigger_Click = 101,
+        XBoxOne_RightTrigger_Pull = 102,
+        XBoxOne_RightTrigger_Click = 103,
+        XBoxOne_LeftStick_Move = 104,
+        XBoxOne_LeftStick_Click = 105,
+        XBoxOne_LeftStick_DPadNorth = 106,
+        XBoxOne_LeftStick_DPadSouth = 107,
+        XBoxOne_LeftStick_DPadWest = 108,
+        XBoxOne_LeftStick_DPadEast = 109,
+        XBoxOne_RightStick_Move = 110,
+        XBoxOne_RightStick_Click = 111,
+        XBoxOne_RightStick_DPadNorth = 112,
+        XBoxOne_RightStick_DPadSouth = 113,
+        XBoxOne_RightStick_DPadWest = 114,
+        XBoxOne_RightStick_DPadEast = 115,
+        XBoxOne_DPad_North = 116,
+        XBoxOne_DPad_South = 117,
+        XBoxOne_DPad_West = 118,
+        XBoxOne_DPad_East = 119,
+        XBox360_A = 120,
+        XBox360_B = 121,
+        XBox360_X = 122,
+        XBox360_Y = 123,
+        XBox360_LeftBumper = 124,
+        XBox360_RightBumper = 125,
+        XBox360_Start = 126,
+        XBox360_Back = 127,
+        XBox360_LeftTrigger_Pull = 128,
+        XBox360_LeftTrigger_Click = 129,
+        XBox360_RightTrigger_Pull	= 130,
+        XBox360_RightTrigger_Click = 131,
+        XBox360_LeftStick_Move = 132,
+        XBox360_LeftStick_Click = 133,
+        XBox360_LeftStick_DPadNorth = 134,
+        XBox360_LeftStick_DPadSouth = 135,
+        XBox360_LeftStick_DPadWest = 136,
+        XBox360_LeftStick_DPadEast = 137,
+        XBox360_RightStick_Move = 138,
+        XBox360_RightStick_Click = 139,
+        XBox360_RightStick_DPadNorth = 140,
+        XBox360_RightStick_DPadSouth = 141,
+        XBox360_RightStick_DPadWest = 142,
+        XBox360_RightStick_DPadEast = 143,
+        XBox360_DPad_North = 144,
+        XBox360_DPad_South = 145,
+        XBox360_DPad_West = 146,
+        XBox360_DPad_East = 147,
+        Count = 196
+
 	}
 	
-	public enum EControllerActionOrigin
+	public enum SteamControllerPad
 	{
-	
+	    Left = 0,
+        Right = 1
 	}
 	
-	public enum ESteamControllerPad
+	public enum SteamInputType
 	{
-	
+	    Unknown = 0,
+        SteamController = 1,
+        XBox360Controller = 2,
+        XBoxOneController = 3,
+        GenericXInput = 4,
+        PS4Controller = 5,
+        AppleMFiController = 6,
+        AndroidController = 7,
+        SwitchJoyConPair = 8,
+        SwitchJoyConSingle = 9,
+        SwitchProController = 10,
+        MobileTouch = 11,
+        PS3Controller = 12,
+        Count = 13,
+        MaximumPossibleValue = 255
 	}
-	
-	public enum ESteamInputType
-	{
-	
-	}
+
+    public enum ControllerSourceMode
+    {
+        None = 0,
+        Dpad = 1,
+        Buttons = 2,
+        FourButtons = 3,
+        AbsoluteMouse = 4,
+        RelativeMouse = 5,
+        JoystickMove = 6,
+        JoystickMouse = 7,
+        JoystickCamera = 8,
+        ScrollWheel = 9,
+        Trigger = 10,
+        TouchMenu = 11,
+        MouseJoystick = 12,
+        MouseRegion = 13,
+        RadialMenu = 14,
+        SingleButton = 15,
+        Switches = 16
+    }
 }

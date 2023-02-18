@@ -151,6 +151,10 @@ namespace RfgNetworking.API
                         {
                             wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: \"\"{{scope String()..Append({paramName})}}\"\"";
                         }
+                        else if (paramType.BaseType == typeof(Enum))
+                        {
+                            wrappers += scope $"enum {paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: .{{{paramName}.ToString(.. scope .())}}";
+                        }
                         else
                         {
                             wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: {{{paramName}}}";
@@ -161,19 +165,22 @@ namespace RfgNetworking.API
                     wrappers += ")";
                     if (hasReturnValue)
                     {
+                        StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
                         if (vtfuncSignature.ReturnType.IsPointer && vtfuncSignature.ReturnType != typeof(char8*))
                     	{
-                            StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
                             wrappers += scope $" -> {returnTypeNameShortened}(0x{{(int)(void*)result:X}})";
                     	}
                         else if (vtfuncSignature.ReturnType == typeof(char8*))
                         {
-                            StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
                             wrappers += scope $" -> {returnTypeNameShortened}(\"\"{{scope String()..Append(result)}}\"\")";
+                        }
+                        else if (vtfuncSignature.ReturnType.BaseType == typeof(Enum))
+                        {
+                            wrappers += scope $" -> enum {returnTypeNameShortened}(.{{result.ToString(.. scope .())}})";
                         }
                         else
                         {
-                            wrappers += scope $" -> {returnTypeName}({{result}})";
+                            wrappers += scope $" -> {returnTypeNameShortened}({{result}})";
                         }
                     }
                     wrappers += "\");\n";
