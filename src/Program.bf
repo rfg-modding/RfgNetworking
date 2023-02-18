@@ -92,9 +92,16 @@ namespace RfgNetworkAPI
         //TODO: Move these + the init/hooking code to separate files. Ideally do it via an interface so you can easily swap between using debug wrappers and the standalone DLL.
         //      The end goal is to fully replace the original sw_api.dll. But I want to keep the option of using this as a wrapper DLL to log the input/output of the original DLL.
         static bool steamClientWrapperInitialized = false;
-        static SteamClientDebugWrapper* SteamClientWrapper = null;
-        static SteamUserDebugWrapper* SteamUserWrapper = null;
-        static SteamFriendsDebugWrapper* SteamFriendsWrapper = null;
+        static append SteamClientDebugWrapper SteamClientWrapper;
+        static append SteamUserDebugWrapper SteamUserWrapper;
+        static append SteamFriendsDebugWrapper SteamFriendsWrapper;
+        static append SteamUtilsDebugWrapper SteamUtilsWrapper;
+        static append SteamMatchmakingDebugWrapper SteamMatchmakingWrapper;
+        static append SteamUserStatsDebugWrapper SteamUserStatsWrapper;
+        static append SteamAppsDebugWrapper SteamAppsWrapper;
+        static append SteamNetworkingDebugWrapper SteamNetworkingWrapper;
+        static append SteamRemoteStorageDebugWrapper SteamRemoteStorageWrapper;
+        static append SteamControllerDebugWrapper SteamControllerWrapper;
 
         [Export, CLink, Log]
         public static bool SW_CCSys_Init()
@@ -124,10 +131,9 @@ namespace RfgNetworkAPI
             if (!steamClientWrapperInitialized)
             {
                 Logger.WriteLine(scope $"{steamClient}");
-                SteamClientWrapper = new SteamClientDebugWrapper();
                 SteamClientWrapper.Init(steamClient, steamClient.Vtable);
                 steamClientWrapperInitialized = true;
-                return SteamClientWrapper;
+                return &SteamClientWrapper;
 			}
             return steamClient;
         }
@@ -145,13 +151,32 @@ namespace RfgNetworkAPI
                 if (steamClientWrapperInitialized)
                 {
                     //SW_CCSys_DynamicInit() calls the RFG callback which sets up CSteamAPIContext. So as long as client initialized all the other steam interfaces should've too
-                    SteamUserWrapper = new SteamUserDebugWrapper();
                     SteamUserWrapper.Init(steamApiContext.User, steamApiContext.User.Vtable);
-                    steamApiContext.User = SteamUserWrapper;
+                    steamApiContext.User = &SteamUserWrapper;
 
-                    SteamFriendsWrapper = new SteamFriendsDebugWrapper();
                     SteamFriendsWrapper.Init(steamApiContext.Friends, steamApiContext.Friends.Vtable);
-                    steamApiContext.Friends = SteamFriendsWrapper;
+                    steamApiContext.Friends = &SteamFriendsWrapper;
+
+                    SteamUtilsWrapper.Init(steamApiContext.Utils, steamApiContext.Utils.Vtable);
+                    steamApiContext.Utils = &SteamUtilsWrapper;
+
+                    SteamMatchmakingWrapper.Init(steamApiContext.Matchmaking, steamApiContext.Matchmaking.Vtable);
+                    steamApiContext.Matchmaking = &SteamMatchmakingWrapper;
+
+                    SteamUserStatsWrapper.Init(steamApiContext.UserStats, steamApiContext.UserStats.Vtable);
+                    steamApiContext.UserStats = &SteamUserStatsWrapper;
+
+                    SteamAppsWrapper.Init(steamApiContext.Apps, steamApiContext.Apps.Vtable);
+                    steamApiContext.Apps = &SteamAppsWrapper;
+
+                    SteamNetworkingWrapper.Init(steamApiContext.Networking, steamApiContext.Networking.Vtable);
+                    steamApiContext.Networking = &SteamNetworkingWrapper;
+
+                    SteamRemoteStorageWrapper.Init(steamApiContext.RemoteStorage, steamApiContext.RemoteStorage.Vtable);
+                    steamApiContext.RemoteStorage = &SteamRemoteStorageWrapper;
+
+                    SteamControllerWrapper.Init(steamApiContext.Controller, steamApiContext.Controller.Vtable);
+                    steamApiContext.Controller = &SteamControllerWrapper;
 				}
                 Logger.Write(scope $"SW_CCSys_DynamicInit(CallbackCounterAndContext* callbackCounterAndContext: 0x{(int)(void*)callbackCounterAndContext:X})");
                 Logger.Write(scope $" -> CSteamAPIContext*(0x{(int)(void*)steamApiContext:X})");

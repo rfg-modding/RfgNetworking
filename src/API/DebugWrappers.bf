@@ -25,6 +25,48 @@ namespace RfgNetworking.API
 
     }
 
+    [DebugWrapper<ISteamUtils.VTable>, CRepr]
+    public struct SteamUtilsDebugWrapper : ISteamUtils
+    {
+
+    }
+
+    [DebugWrapper<ISteamMatchmaking.VTable>, CRepr]
+    public struct SteamMatchmakingDebugWrapper : ISteamMatchmaking
+    {
+
+    }
+
+    [DebugWrapper<ISteamUserStats.VTable>, CRepr]
+    public struct SteamUserStatsDebugWrapper : ISteamUserStats
+    {
+
+    }
+
+    [DebugWrapper<ISteamApps.VTable>, CRepr]
+    public struct SteamAppsDebugWrapper : ISteamApps
+    {
+
+    }
+
+    [DebugWrapper<ISteamNetworking.VTable>, CRepr]
+    public struct SteamNetworkingDebugWrapper : ISteamNetworking
+    {
+
+    }
+
+    [DebugWrapper<ISteamRemoteStorage.VTable>, CRepr]
+    public struct SteamRemoteStorageDebugWrapper : ISteamRemoteStorage
+    {
+
+    }
+
+    [DebugWrapper<ISteamController.VTable>, CRepr]
+    public struct SteamControllerDebugWrapper : ISteamController
+    {
+
+    }
+
     //Generates wrapper functions for a steam interface. These log every time the interface is used and any data passed to or from it.
     [AttributeUsage(.Struct)]
     public struct DebugWrapperAttribute<TInterface> : Attribute, IOnTypeInit
@@ -98,7 +140,7 @@ namespace RfgNetworking.API
                         {
                             if (paramName == "this")
                             {
-                                wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: 0x{{(int)(void*)_originalVtable}}";
+                                wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: 0x{{(int)(void*)_originalInterface}}";
                             }
                             else
                             {
