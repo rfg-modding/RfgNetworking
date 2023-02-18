@@ -1,8 +1,9 @@
-using RfgNetworking.API;
 using RfgNetworking.Win32;
 using RfgNetworking.Misc;
-using System;
+using RfgNetworking.API;
+using System.Threading;
 using System.IO;
+using System;
 
 namespace RfgNetworkAPI
 {
@@ -33,11 +34,15 @@ namespace RfgNetworkAPI
         static function void() SW_RegisterCallback_original = null;
         static function void() SW_UnregisterCallback_original = null;
 
+        //Input thread state
+        static Thread _inputThread = new .(new () => Program.InputThreadLoop());
+        static bool _exit = false;
+
         static HINSTANCE _originalDLLHandle = 0;
 
         public static this()
         {
-            //System.Threading.Thread.Sleep(10000);
+            System.Threading.Thread.Sleep(5000);
 
             Logger.Init();
             Logger.WriteLine("********************");
@@ -72,10 +77,19 @@ namespace RfgNetworkAPI
             GetDLLFunction!(_originalDLLHandle, &SW_HasLeaderboards_original, "SW_HasLeaderboards");
             GetDLLFunction!(_originalDLLHandle, &SW_RegisterCallback_original, "SW_RegisterCallback");
             GetDLLFunction!(_originalDLLHandle, &SW_UnregisterCallback_original, "SW_UnregisterCallback");
+
+            _inputThread.Start();
         }
 
         public static ~this()
         {
+            //Log state on close in case I forget to
+            LogDebugWrappersState();
+
+            //Stop input thread
+            _exit = true;
+            _inputThread.Join(500);
+
             if (_originalDLLHandle != 0)
             {
                 Win32.FreeLibrary(_originalDLLHandle);
@@ -102,6 +116,35 @@ namespace RfgNetworkAPI
         static append SteamNetworkingDebugWrapper SteamNetworkingWrapper;
         static append SteamRemoteStorageDebugWrapper SteamRemoteStorageWrapper;
         static append SteamControllerDebugWrapper SteamControllerWrapper;
+
+        static bool _lastKeyUpStateF1 = true;
+        public static void InputThreadLoop()
+        {
+            while (!_exit)
+            {
+                bool keyUpStateF1 = (Win32.GetKeyState(0x70) & 0x8000) == 0; //True if F1 key is up
+                if (keyUpStateF1 && !_lastKeyUpStateF1)
+                {
+                    LogDebugWrappersState();
+                }
+                _lastKeyUpStateF1 = keyUpStateF1;
+            }
+        }
+
+        private static void LogDebugWrappersState()
+        {
+            //Log function call data tracked by the debug wrappers.
+            SteamClientWrapper.LogState();
+            SteamUserWrapper.LogState();
+            SteamFriendsWrapper.LogState();
+            SteamUtilsWrapper.LogState();
+            SteamMatchmakingWrapper.LogState();
+            SteamUserStatsWrapper.LogState();
+            SteamAppsWrapper.LogState();
+            SteamNetworkingWrapper.LogState();
+            SteamRemoteStorageWrapper.LogState();
+            SteamControllerWrapper.LogState();
+        }
 
         [Export, CLink, Log]
         public static bool SW_CCSys_Init()

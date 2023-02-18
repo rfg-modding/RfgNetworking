@@ -4,9 +4,6 @@ using System;
 
 namespace RfgNetworking.API
 {
-    //TODO: Add call counter to log functions. Write to log at some point. Could use GetAsyncKeyPress to make a keybind.
-    //TODO: Make DebugWrapper take the ISteamXXX interface instead and get vtable via reflection. Init() could be fully typed and only take the interface as an argument
-
     [DebugWrapper<ISteamClient.VTable>, CRepr]
     public struct SteamClientDebugWrapper : ISteamClient
     {
@@ -74,18 +71,29 @@ namespace RfgNetworking.API
         [Comptime]
         void IOnTypeInit.OnTypeInit(Type type, Self* prev)
         {
-            String initFunc = scope .();
-            String wrappers = scope .();
+            String initFunc = scope .(); //Initializes vtable
+            String wrappers = scope .(); //Wrapper functions that log interface inputs + outputs
+            String logStateFunc = scope .(); //Print state such as call count and functions which always return the same value
 
             Compiler.EmitTypeBody(type, "private void* _originalInterface = null;\n");
             Compiler.EmitTypeBody(type, scope $"private {typeof(TInterface).GetFullName(.. scope .())}* _originalVtable = null;\n\n");
 
-            StringView interfaceName = typeof(TInterface).GetFullName(.. scope .());
-            initFunc += scope $"public void Init(void* originalInterface, {interfaceName}* originalVtable) mut\n";
+            //Get steam interface name. Assuming structs using this attribute inherit the steam interface
+            Type steamInterfaceType = type.BaseType;
+            String steamInterfaceTypeName = steamInterfaceType != null ? steamInterfaceType.GetFullName(.. scope .()) : "";
+            StringView steamInterfaceNameShortened = steamInterfaceTypeName.Substring(steamInterfaceTypeName.LastIndexOf('.') + 1)..Trim();
+            StringView vtableTypeName = typeof(TInterface).GetFullName(.. scope .());
+
+            logStateFunc += "public void LogState()\n";
+            logStateFunc += "{\n";
+            logStateFunc += scope $"    Logger.WriteLine(\"\\n{steamInterfaceNameShortened} State:\");\n";
+            logStateFunc += scope $"    Logger.WriteLine(\"    Call counts:\");\n";
+
+            initFunc += scope $"public void Init({steamInterfaceNameShortened}* originalInterface, {vtableTypeName}* originalVtable) mut\n";
             initFunc += "{\n";
             initFunc += "    _originalInterface = originalInterface;\n";
             initFunc += "    _originalVtable = originalVtable;\n";
-            initFunc += scope $"    Vtable = new {interfaceName}();\n";
+            initFunc += scope $"    Vtable = new {vtableTypeName}();\n";
             for (var vtfunc in typeof(TInterface).GetFields())
             {
                 if (vtfunc.FieldType.BaseType != typeof(Function))
@@ -95,13 +103,20 @@ namespace RfgNetworking.API
                 {
                     initFunc += scope $"    Vtable.{vtfunc.Name} = => {vtfunc.Name}_Log;\n";
 
-                    //Emit log wrapper
+                    //Emit log wrapper + related state
                     bool hasReturnValue = vtfuncSignature.ReturnType != typeof(void);
                     String returnTypeName = vtfuncSignature.ReturnType.GetFullName(.. scope .());
                     String args = GetMethodArgsString(vtfuncSignature, .. scope .());
+                    String callCounterName = scope $"_{vtfunc.Name}_CallCounter";
                     wrappers += "\n";
+                    wrappers += scope $"public static u64 {callCounterName} = 0;\n";
                     wrappers += scope $"public {returnTypeName} {vtfunc.Name}_Log{args}\n";
                     wrappers += "{\n";
+
+                    //LogState() code
+                    {
+                        logStateFunc += scope $"    Logger.WriteLine(scope $\"        {vtfunc.Name}: {{{callCounterName}}}\");\n";
+                    }
 
                     //Call original function
                     wrappers += "    ";
@@ -123,13 +138,8 @@ namespace RfgNetworking.API
                     }
                     wrappers += ");\n";
 
-                    //Get interface name. Assuming structs using this attribute inherit the steam interface
-                    Type baseType = type.BaseType;
-                    String baseTypeName = baseType != null ? baseType.GetFullName(.. scope .()) : "";
-                    StringView baseTypeNameShortened = baseTypeName.Substring(baseTypeName.LastIndexOf('.') + 1)..Trim();
-
                     //Log arguments & return value
-                    wrappers += scope $"    Logger.WriteLine(scope $""{baseTypeNameShortened}::{vtfunc.Name}(";
+                    wrappers += scope $"    Logger.WriteLine(scope $""{steamInterfaceNameShortened}::{vtfunc.Name}(";
                     for (int i = 0; i < vtfuncSignature.ParamCount; i++)
                     {
                         StringView paramName = vtfuncSignature.GetParamName(i);
@@ -185,20 +195,25 @@ namespace RfgNetworking.API
                     }
                     wrappers += "\");\n";
 
+                    //Increment call counter
+                    wrappers += scope $"    {callCounterName}++;\n";
+
                     //Return original functions result
                     if (hasReturnValue)
                         wrappers += "    return result;\n";
 
-                    wrappers += "}\n";
+                    wrappers += "}\n"; //End up XXXX_Log()
                 }
                 else
                 {
                     Runtime.FatalError("Failed to reflect .Invoke() from vtable function pointer. Needed for wrapper generation.");
                 }
             }
-            initFunc += "}\n";
+            initFunc += "}\n\n";
+            logStateFunc += "}\n";
 
             Compiler.EmitTypeBody(type, initFunc);
+            Compiler.EmitTypeBody(type, logStateFunc);
             Compiler.EmitTypeBody(type, wrappers);
         }
 
