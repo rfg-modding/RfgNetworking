@@ -6,14 +6,47 @@ namespace RfgNetworking.Backend.Community
     //Standalone DLL that connects to a community made master server
     public class CommunityBackend : IDLLBackend
     {
+        //The game stores all its interface pointers in this
+        public static CSteamAPIContext Context;
+
+        //Interfaces exposed by the DLL. Some user the interfaces directly since they aren't implemented yet.
+        public static CClient Client;
+        public static CUser User;
+        public static CFriends Friends;
+        public static CUtils Utils;
+        public static CMatchmaking Matchmaking;
+        public static CUserStats UserStats;
+        public static CApps Apps;
+        public static CNetworking Networking;
+        public static CRemoteStorage RemoteStorage;
+        public static CController Controller;
+
         void IDLLBackend.Init()
         {
-            
+            Client.ModuleInit();
+            User.ModuleInit();
+            Friends.ModuleInit();
+            Utils.ModuleInit();
+            Matchmaking.ModuleInit();
+            UserStats.ModuleInit();
+            Apps.ModuleInit();
+            Networking.ModuleInit();
+            RemoteStorage.ModuleInit();
+            Controller.ModuleInit();
         }
 
         void IDLLBackend.Shutdown()
         {
-
+            Client.ModuleShutdown();
+            User.ModuleShutdown();
+            Friends.ModuleShutdown();
+            Utils.ModuleShutdown();
+            Matchmaking.ModuleShutdown();
+            UserStats.ModuleShutdown();
+            Apps.ModuleShutdown();
+            Networking.ModuleShutdown();
+            RemoteStorage.ModuleShutdown();
+            Controller.ModuleShutdown();
         }
 
         bool IDLLBackend.SW_CCSys_Init()
@@ -23,12 +56,19 @@ namespace RfgNetworking.Backend.Community
 
         ISteamClient* IDLLBackend.SW_CCSys_CreateInternalModule(char8* interfaceName)
         {
-            return null;
+            return &Client;
         }
 
         CSteamAPIContext* IDLLBackend.SW_CCSys_DynamicInit(CallbackCounterAndContext* callbackCounterAndContext)
         {
-            return null;
+            if (callbackCounterAndContext.Counter == 0)
+            {
+                callbackCounterAndContext.Context = &Context;
+                callbackCounterAndContext.InitCallback(callbackCounterAndContext.Context);
+            }
+
+            callbackCounterAndContext.Counter++;
+            return callbackCounterAndContext.Context;
         }
 
         void IDLLBackend.SW_CCSys_GetP()
@@ -38,7 +78,7 @@ namespace RfgNetworking.Backend.Community
 
         HSteamPipe IDLLBackend.SW_CCSys_GetPInterface()
         {
-            return 0;
+            return (HSteamPipe)1;
         }
 
         void IDLLBackend.SW_CCSys_GetU()
@@ -48,7 +88,7 @@ namespace RfgNetworking.Backend.Community
 
         HSteamUser IDLLBackend.SW_CCSys_GetUInterface()
         {
-            return 0;
+            return (HSteamUser)1;
         }
 
         void IDLLBackend.SW_CCSys_InitCallbackFunc(void* callbackFunc, int32 callbackId)

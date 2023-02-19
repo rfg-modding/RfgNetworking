@@ -40,7 +40,7 @@ namespace RfgNetworking.API
     struct CallbackCounterAndContext
     {
         //The game sets this to SteamInternal_OnContextInit prior to calling SW_CCSysDynamicInit. The game uses this callback to set the pointers in Context
-        public function void(CSteamAPIContext* context) InitCallback;
+        public function [CallingConvention(.Cdecl)] void(CSteamAPIContext* context) InitCallback;
         public i32 Counter; //The number of times SW_CCSys_DynamicInit has been called
         public CSteamAPIContext* Context;
     }
@@ -471,12 +471,12 @@ namespace RfgNetworking.API
             public function UGCHandle(ISteamRemoteStorage* this, i32 iCachedContent) GetCachedUGCHandle;
             public function SteamAPICall(ISteamRemoteStorage* this, char8* pchFile, char8* pchPreviewFile, AppId nConsumerAppId, char8* pchTitle, char8* pchDescription, RemoteStoragePublishedFileVisibility eVisibility, SteamParamStringArray* pTags, WorkshopFileType eWorkshopFileType) PublishWorkshopFile;
             public function PublishedFileUpdateHandle(ISteamRemoteStorage* this, PublishedFileId unPublishedFileId) CreatePublishedFileUpdateRequest;
-            public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, char8* pchFile) UpdatePublishedFileFile;
-            public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, char8* pchPreviewFile) UpdatePublishedFilePreviewFile;
-            public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, char8* pchTitle) UpdatePublishedFileTitle;
-            public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, char8* pchDescription) UpdatePublishedFileDescription;
-            public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, RemoteStoragePublishedFileVisibility eVisibility) UpdatePublishedFileVisibility;
-            public function u8(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, SteamParamStringArray *pTags) UpdatePublishedFileTags;
+            public function bool(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, char8* pchFile) UpdatePublishedFileFile;
+            public function bool(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, char8* pchPreviewFile) UpdatePublishedFilePreviewFile;
+            public function bool(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, char8* pchTitle) UpdatePublishedFileTitle;
+            public function bool(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, char8* pchDescription) UpdatePublishedFileDescription;
+            public function bool(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, RemoteStoragePublishedFileVisibility eVisibility) UpdatePublishedFileVisibility;
+            public function bool(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle, SteamParamStringArray *pTags) UpdatePublishedFileTags;
             public function SteamAPICall(ISteamRemoteStorage* this, PublishedFileUpdateHandle updateHandle) CommitPublishedFileUpdate;
             public function SteamAPICall(ISteamRemoteStorage* this, PublishedFileId unPublishedFileId, uint32 unMaxSecondsOld) GetPublishedFileDetails;
             public function SteamAPICall(ISteamRemoteStorage* this, PublishedFileId unPublishedFileId) DeletePublishedFile;
