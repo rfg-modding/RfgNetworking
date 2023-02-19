@@ -1,9 +1,12 @@
-using System.Reflection;
 using RfgNetworking.Misc;
+using RfgNetworking.API;
+using System.Reflection;
 using System;
 
-namespace RfgNetworking.API
+namespace RfgNetworking.Backend.Debug
 {
+
+
     [DebugWrapper<ISteamClient.VTable>, CRepr]
     public struct SteamClientDebugWrapper : ISteamClient
     {

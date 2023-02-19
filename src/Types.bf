@@ -17,7 +17,7 @@ static
 {
     //Ensure sized types are the expected size. If any of these fail you're either on a weird platform or there are serious problems
     [Comptime]
-	static void ValidateRfgNetworkAPITypeSizes()
+	static void ValidateRfgNetworkingTypeSizes()
     {
         Compiler.Assert(sizeof(u8) == 1);
         Compiler.Assert(sizeof(u16) == 2);
