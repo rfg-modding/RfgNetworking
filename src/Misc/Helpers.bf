@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 
 //Toggles whether DebugLogAttribute does anything or not
-//#define ENABLE_DEBUG_LOG
+#define ENABLE_DEBUG_LOG
 
 namespace RfgNetworking.Misc
 {
@@ -54,7 +54,7 @@ namespace RfgNetworking.Misc
                 }
                 else if (returnType == typeof(char8*))
                 {
-                    args += scope $"char8* val = @return == null ? \"\" : @return;\n";
+                    args += scope $"char8* val = @return == null ? \"null\" : @return;\n";
                     emit += scope $" -> {returnTypeNameShortened}(\"{{scope String()..Append(val)}}\")";
                 }
                 else if (returnType.BaseType == typeof(Enum))
@@ -133,7 +133,7 @@ namespace RfgNetworking.Misc
                 }
                 else if (returnType == typeof(char8*))
                 {
-                    args += scope $"char8* val = @return == null ? \"\" : @return;\n";
+                    args += scope $"char8* val = @return == null ? \"null\" : @return;\n";
                     emit += scope $" -> {returnTypeNameShortened}(\"\"{{scope String()..Append(val)}}\"\")";
                 }
                 else if (returnType.BaseType == typeof(Enum))

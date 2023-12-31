@@ -1,5 +1,6 @@
 using RfgNetworking.API;
 using System;
+using RfgNetworking.Misc;
 
 namespace RfgNetworking.Backend.Community
 {
@@ -91,12 +92,38 @@ namespace RfgNetworking.Backend.Community
             return (HSteamUser)1;
         }
 
-        void IDLLBackend.SW_CCSys_InitCallbackFunc(void* callbackFunc, int32 callbackId)
+        void IDLLBackend.SW_CCSys_InitCallbackFunc(CCallbackBase* callback, CallbackType callbackId)
         {
+            switch (callbackId)
+			{
+                case .ValidateAuthTicketResponse:
 
+                case .GetAuthSessionTicketResponse:
+
+                case .GameLobbyJoinRequested:
+
+                case .LobbyEnter:
+
+                case .LobbyDataUpdate:
+
+                case .LobbyChatUpdate:
+
+                case .SteamUserStatsReceived:
+
+                case .SteamUserStatsStored:
+
+                case .SteamUserAchievementStored:
+
+                case .P2PSessionRequest:
+
+                default:
+                    String errorMessage = scope $"Unsupported callback ID '{(i32)callbackId}' in CommunityBackend.SW_CCSys_InitCallbackFunc()";
+                    Logger.WriteLine(errorMessage);
+                    Runtime.FatalError(errorMessage);
+			}
         }
 
-        void IDLLBackend.SW_CCSys_RemoveCallbackFunc(void* callbackFunc)
+        void IDLLBackend.SW_CCSys_RemoveCallbackFunc(CCallbackBase* callback)
         {
 
         }

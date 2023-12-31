@@ -64,7 +64,7 @@ namespace RfgNetworking.Backend.Community
         [DebugLog]
         public bool RequestCurrentStats()
         {
-            return false;
+            return true;
         }
 
         [DebugLog]
@@ -154,7 +154,7 @@ namespace RfgNetworking.Backend.Community
         [DebugLog]
         public char8* GetAchievementName(uint32 iAchievement)
         {
-            return null;
+            return "";
         }
 
         [DebugLog]

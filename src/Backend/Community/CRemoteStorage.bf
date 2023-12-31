@@ -1,11 +1,26 @@
 using RfgNetworking.Misc;
 using RfgNetworking.API;
 using System;
+using System.IO;
+using System.Collections;
 
 namespace RfgNetworking.Backend.Community
 {
     public struct CRemoteStorage : ISteamRemoteStorage
     {
+        //TODO: Move all the logic and data into a class so it can be easily deleted and we're not restricted by being in a struct
+        public String RemoteStorageFolder = null;
+        public List<FileData> Files;
+        static char8* FileNotFoundString = "";
+
+        public class FileData
+        {
+            public append String Filename;
+            public append String AbsoluteFilePath;
+            //This path is relative to the remote storage folder
+            public append String FilePath;
+        }
+
         [DebugLog]
         public void ModuleInit() mut
         {
@@ -65,23 +80,70 @@ namespace RfgNetworking.Backend.Community
             Vtable.EnumeratePublishedFilesByUserAction = => EnumeratePublishedFilesByUserAction;
             Vtable.EnumeratePublishedWorkshopFiles = => EnumeratePublishedWorkshopFiles;
             Vtable.UGCDownloadToLocation = => UGCDownloadToLocation;
+
+            String basePath = scope .()..Append(@"%LOCALAPPDATA%\GOG.com\Galaxy\Applications\51153410217180642\Storage\Shared\Files\");
+            RemoteStorageFolder = new String();
+            if (Path.ExpandEnvironmentVariables(basePath, RemoteStorageFolder) case .Err)
+            {
+                String errorMessage = scope $"Failed to expand remote storage folder path '{basePath}' in CRemoteStorage.Init()";
+                Logger.WriteLine(errorMessage);
+                Runtime.FatalError(errorMessage);
+            }
+
+            Files = new List<FileData>();
         }
 
         [DebugLog]
         public void ModuleShutdown()
         {
+            if (RemoteStorageFolder != null)
+                delete RemoteStorageFolder;
+
+            delete Files;
+
             delete Vtable;
         }
 
         [DebugLog]
         public bool FileWrite(char8* pchFile, void* pvData, int32 cubData)
         {
-            return false;
+            String inAbsolutePath = scope $"{RemoteStorageFolder}{StringView(pchFile)}";
+            if (File.WriteAll(inAbsolutePath, .((u8*)pvData, cubData)) case .Ok)
+            {
+                return true;
+            }
+            else
+            {
+                Logger.WriteLine($"Error in CRemoteStorage.FileWrite(). Failed to write {cubData} bytes to '{StringView(pchFile)}'");
+                return false;
+            }
         }
 
         [DebugLog]
         public int32 FileRead(char8* pchFile, void* pvData, int32 cubDataToRead)
         {
+            for (FileData file in Files)
+            {
+                if (PathsEqual(file.FilePath, StringView(pchFile)))
+                {
+                    List<u8> tempBuffer = new List<uint8>();
+                    defer delete tempBuffer;
+                    if (File.ReadAll(file.AbsoluteFilePath, tempBuffer) case .Err)
+                    {
+                        Logger.WriteLine($"Error in CRemoteStorage.FileRead(). Failed to read {cubDataToRead} bytes from '{StringView(pchFile)}'");
+                    }
+
+                    if (tempBuffer.Count > cubDataToRead)
+                    {
+                        Logger.WriteLine($"Error in CRemoteStorage.FileRead(). File larger than provided buffer. Expected size = {cubDataToRead} bytes. Actual size = {tempBuffer.Count} bytes");
+                        return 0;
+                    }
+
+                    Internal.MemCpy(pvData, tempBuffer.Ptr, cubDataToRead);
+                    return cubDataToRead;
+                }
+            }
+
             return 0;
         }
 
@@ -154,6 +216,14 @@ namespace RfgNetworking.Backend.Community
         [DebugLog]
         public bool FileExists(char8* pchFile)
         {
+            for (FileData file in Files)
+            {
+                if (PathsEqual(file.FilePath, StringView(pchFile)))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
@@ -163,9 +233,31 @@ namespace RfgNetworking.Backend.Community
             return false;
         }
 
+        //The built in Path.Equals() currently Asserts that the paths don't have any forward slashes
+        //Not making this an extension yet since it may need special logic to handle the relative paths this interface uses
+        private static bool PathsEqual(StringView pathA, StringView pathB)
+        {
+            //Make sure the paths are formatted the same way
+            String fixedPathA = scope .()..Append(pathA);
+            String fixedPathB = scope .()..Append(pathB);
+            fixedPathA.Replace(@"\\", @"\");
+            fixedPathB.Replace(@"\\", @"\");
+            fixedPathA.Replace(@"\", "/");
+            fixedPathB.Replace(@"\", "/");
+            return fixedPathA.Equals(fixedPathB, .OrdinalIgnoreCase);
+        }    
+
         [DebugLog]
         public int32 GetFileSize(char8* pchFile)
         {
+            for (FileData file in Files)
+            {
+                if (PathsEqual(file.FilePath, .(pchFile)))
+                {
+                    return (i32)File.GetFileSize(file.AbsoluteFilePath);
+                }
+            }
+
             return 0;
         }
 
@@ -184,13 +276,54 @@ namespace RfgNetworking.Backend.Community
         [DebugLog]
         public int32 GetFileCount()
         {
-            return 0;
+            //Based on the steam docs it appears they also only collect the file list when this is called.
+            //I think there's a windows API function that can notify you when files/directories change. Could be a future improvement.
+			//For now this is enough since we haven't altered how the game uses the DLL
+            GetFileList();
+            return (i32)Files.Count;
+        }
+
+        private void GetFileList()
+        {
+            ClearAndDeleteItems(Files);
+            Logger.WriteLine("Searching for files in {}", RemoteStorageFolder);
+            FindFilesInDirectoryRecursive(RemoteStorageFolder);
+        }
+
+        private void FindFilesInDirectoryRecursive(StringView dirPath)
+        {
+            Logger.WriteLine(dirPath);
+            for (var entry in Directory.EnumerateFiles(dirPath))
+            {
+                FileData fileData = new .();
+                entry.GetFileName(.. fileData.Filename);
+                entry.GetFilePath(.. fileData.AbsoluteFilePath);
+                fileData.AbsoluteFilePath.Replace(@"\\", @"\");
+
+                //This path is relative to the remote storage folder
+                fileData.FilePath.Set(fileData.AbsoluteFilePath);
+                fileData.FilePath.Remove(0, RemoteStorageFolder.Length);
+
+                Files.Add(fileData);
+            }
+
+            for (var entry in Directory.EnumerateDirectories(dirPath))
+            {
+                FindFilesInDirectoryRecursive(entry.GetFilePath(.. scope .()));
+            }
         }
 
         [DebugLog]
         public char8* GetFileNameAndSize(int32 iFile, int32* pnFileSizeInBytes)
         {
-            return null;
+            if (iFile >= Files.Count || iFile < 0)
+            {
+                return FileNotFoundString;
+            }
+
+            FileData file = Files[iFile];
+            *pnFileSizeInBytes = (i32)File.GetFileSize(file.AbsoluteFilePath);
+            return file.FilePath.CStr();
         }
 
         [DebugLog]

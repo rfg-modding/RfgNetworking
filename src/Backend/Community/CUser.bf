@@ -6,6 +6,9 @@ namespace RfgNetworking.Backend.Community
 {
     public struct CUser : ISteamUser
     {
+        static CSteamID SteamID = (CSteamID)233244329324789232;
+        static CSteamID* SteamIDPtr = null; //Couldn't figure out how to put mut specifier on the vtable function pointer
+
         [DebugLog]
         public void ModuleInit() mut
         {
@@ -39,6 +42,8 @@ namespace RfgNetworking.Backend.Community
             Vtable.BIsTwoFactorEnabled = => BIsTwoFactorEnabled;
             Vtable.BIsPhoneIdentifying = => BIsPhoneIdentifying;
             Vtable.BIsPhoneRequiringVerification = => BIsPhoneRequiringVerification;
+
+            SteamIDPtr = &SteamID;
         }
 
         [DebugLog]
@@ -60,9 +65,10 @@ namespace RfgNetworking.Backend.Community
         }
 
         [DebugLog]
-        public CSteamID GetSteamID(CSteamID* __return)
+        public CSteamID* GetSteamID(CSteamID* __return)
         {
-            return (CSteamID)269572041848239704;
+            *__return = SteamID;
+            return SteamIDPtr;
         }
 
         [DebugLog]
@@ -122,7 +128,7 @@ namespace RfgNetworking.Backend.Community
         [DebugLog]
         public uint32 GetVoiceOptimalSampleRate()
         {
-            return 24000;
+            return 0;
         }
 
         [DebugLog]

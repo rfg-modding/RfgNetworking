@@ -64,7 +64,7 @@ namespace RfgNetworking
         }
 
         [Export, CLink]
-        public static void SW_CCSys_InitCallbackFunc(CCallbackBase* callbackFunc, i32 callbackId)
+        public static void SW_CCSys_InitCallbackFunc(CCallbackBase* callbackFunc, CallbackType callbackId)
         {
             _backend.SW_CCSys_InitCallbackFunc(callbackFunc, callbackId);
         }

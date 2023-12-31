@@ -8,10 +8,10 @@ StartupObject = "RfgNetworking.Program"
 [Configs.Debug.Win32]
 BuildKind = "DynamicLib"
 TargetName = "sw_api"
-BeefLibType = "Static"
+BeefLibType = "DynamicDebug"
 PostBuildCmds = ["CopyFilesIfNewer(\"$(BuildDir)/sw_api.dll\", \"D:/GOG/Games/Red Faction Guerrilla Re-Mars-tered/\")"]
-DebugCommand = "D:/GOG/Games/Red Faction Guerrilla Re-Mars-tered/rfg.exe"
-DebugWorkingDirectory = "D:/GOG/Games/Red Faction Guerrilla Re-Mars-tered/"
+DebugCommand = "D:/GOG/Games/Red Faction Guerrilla Re-Mars-tered/Launcher.exe"
+DebugWorkingDirectory = "d:\\GOG\\Games\\Red Faction Guerrilla Re-Mars-tered\\"
 
 [Configs.Debug.Win64]
 BuildKind = "DynamicLib"

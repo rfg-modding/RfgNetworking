@@ -104,7 +104,7 @@ namespace RfgNetworking.API
         {
             public function HSteamUser(ISteamUser* this) SW_CCSys_GetU;
             public function bool(ISteamUser* this) BLoggedOn;
-            public function CSteamID(ISteamUser* this, CSteamID* __return) GetSteamID;
+            public function CSteamID*(ISteamUser* this, CSteamID* __return) GetSteamID;
             public function i32(ISteamUser* this, void* pAuthBlob, i32 cbMaxAuthBlob, CSteamID steamIDGameServer, u32 unIPServer, u16 usPortServer, bool bSecure) InitiateGameConnection;
             public function void(ISteamUser* this, u32 unIPServer, u16 usPortServer) TerminateGameConnection;
             public function void(ISteamUser* this, CGameID gameID, i32 eAppUsageEvent, char8* pchExtraInfo) TrackAppUsageEvent;
@@ -624,28 +624,6 @@ namespace RfgNetworking.API
         public void* Vtable; //Not implemented by the GOG version of sw_api.dll
     }
 #endregion
-
-    [CRepr]
-    public struct CCallbackBase
-    {
-    	CCallbackBase.VTable* vfptr;
-    	u8 m_nCallbackFlags;
-    	i32 m_iCallback;
-
-        [CRepr]
-        public struct VTable
-        {
-            public function void(CCallbackBase* this, void* param0, bool param1, u64 param2) Run;
-            public function void(CCallbackBase* this, void* param0) Run2;
-            public function i32(CCallbackBase* this) GetCallbackSizeBytes;
-        }
-    }
-
-    [CRepr]
-    public struct CCallResult<T, U> : CCallbackBase
-    {
-
-    }
 
     //Note: Some of these types aren't really structs. Structs are used so we can easy add helper functions and so the log functions show the correct type name. With typealias it shows the base type instead of the alias.
     [CRepr]

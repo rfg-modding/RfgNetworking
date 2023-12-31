@@ -4,51 +4,158 @@ using RfgNetworking.Misc;
 using RfgNetworking.API;
 using System.Threading;
 using System;
+using System.Collections;
 
 namespace RfgNetworking.Backend.Debug
 {
     //Wrapper DLL backend. Passes all function calls to the original and logs their arguments & results
     public class DebugBackend : IDLLBackend
     {
-        static function bool() SW_CCSys_Init_original = null;
-        static function ISteamClient*(char8* interfaceName) SW_CCSys_CreateInternalModule_original = null;
-        static function CSteamAPIContext*(void** callbackCounterAndContext) SW_CCSys_DynamicInit_original = null;
-        static function void() SW_CCSys_GetP_original = null;
-        static function HSteamPipe() SW_CCSys_GetPInterface_original = null;
-        static function void() SW_CCSys_GetU_original = null;
-        static function HSteamUser() SW_CCSys_GetUInterface_original = null;
-        static function void(void* callbackFunc, i32 callbackId) SW_CCSys_InitCallbackFunc_original = null;
-        static function void(void* callbackFunc) SW_CCSys_RemoveCallbackFunc_original = null;
-        static function void() SW_CCSys_IsBackendActive_original = null;
-        static function void() SW_CCSys_ProcessApiCb_original = null;
-        static function void(CCallbackBase* callbackResult, u32 apiCallHandleLower, u32 apiCallHandleUpper) SW_CCSys_RegisterCallResult_original = null;
-        static function void(CCallbackBase* callbackResult, u32 apiCallHandleLower, u32 apiCallHandleUpper) SW_CCSys_UnregisterCallResult_original = null;
-        static function void() SW_CCSys_Shutdown_original = null;
-        static function void() SW_CCSys_TestInitialConditions_original = null;
-        static function bool() SW_HasAchievements_original = null;
-        static function bool() SW_HasInvites_original = null;
-        static function bool() SW_HasLeaderboards_original = null;
-        static function void() SW_RegisterCallback_original = null;
-        static function void() SW_UnregisterCallback_original = null;
+        function bool() SW_CCSys_Init_original = null;
+        function ISteamClient*(char8* interfaceName) SW_CCSys_CreateInternalModule_original = null;
+        function CSteamAPIContext*(void** callbackCounterAndContext) SW_CCSys_DynamicInit_original = null;
+        function void() SW_CCSys_GetP_original = null;
+        function HSteamPipe() SW_CCSys_GetPInterface_original = null;
+        function void() SW_CCSys_GetU_original = null;
+        function HSteamUser() SW_CCSys_GetUInterface_original = null;
+        function void(void* callbackFunc, CallbackType callbackId) SW_CCSys_InitCallbackFunc_original = null;
+        function void(void* callbackFunc) SW_CCSys_RemoveCallbackFunc_original = null;
+        function void() SW_CCSys_IsBackendActive_original = null;
+        function void() SW_CCSys_ProcessApiCb_original = null;
+        function void(CCallbackBase* callbackResult, u32 apiCallHandleLower, u32 apiCallHandleUpper) SW_CCSys_RegisterCallResult_original = null;
+        function void(CCallbackBase* callbackResult, u32 apiCallHandleLower, u32 apiCallHandleUpper) SW_CCSys_UnregisterCallResult_original = null;
+        function void() SW_CCSys_Shutdown_original = null;
+        function void() SW_CCSys_TestInitialConditions_original = null;
+        function bool() SW_HasAchievements_original = null;
+        function bool() SW_HasInvites_original = null;
+        function bool() SW_HasLeaderboards_original = null;
+        function void() SW_RegisterCallback_original = null;
+        function void() SW_UnregisterCallback_original = null;
 
         //Input thread state
-        static Thread _inputThread = new .(new () => InputThreadLoop());
-        static bool _exit = false;
+        Thread _inputThread = null;
+        bool _exit = false;
 
-        static HINSTANCE _originalDLLHandle = 0;
+        HINSTANCE _originalDLLHandle = 0;
 
         //Interface logging wrappers
-        static bool steamClientWrapperInitialized = false;
-        static append SteamClientDebugWrapper SteamClientWrapper;
-        static append SteamUserDebugWrapper SteamUserWrapper;
-        static append SteamFriendsDebugWrapper SteamFriendsWrapper;
-        static append SteamUtilsDebugWrapper SteamUtilsWrapper;
-        static append SteamMatchmakingDebugWrapper SteamMatchmakingWrapper;
-        static append SteamUserStatsDebugWrapper SteamUserStatsWrapper;
-        static append SteamAppsDebugWrapper SteamAppsWrapper;
-        static append SteamNetworkingDebugWrapper SteamNetworkingWrapper;
-        static append SteamRemoteStorageDebugWrapper SteamRemoteStorageWrapper;
-        static append SteamControllerDebugWrapper SteamControllerWrapper;
+        bool steamClientWrapperInitialized = false;
+        SteamClientDebugWrapper SteamClientWrapper;
+        SteamUserDebugWrapper SteamUserWrapper;
+        SteamFriendsDebugWrapper SteamFriendsWrapper;
+        SteamUtilsDebugWrapper SteamUtilsWrapper;
+        SteamMatchmakingDebugWrapper SteamMatchmakingWrapper;
+        SteamUserStatsDebugWrapper SteamUserStatsWrapper;
+        SteamAppsDebugWrapper SteamAppsWrapper;
+        SteamNetworkingDebugWrapper SteamNetworkingWrapper;
+        SteamRemoteStorageDebugWrapper SteamRemoteStorageWrapper;
+        SteamControllerDebugWrapper SteamControllerWrapper;
+
+        List<CallbackLogger*> CallbackLoggers = new .() ~DeleteContainerAndItems!(_);
+        Dictionary<CallbackType, CallResultLogger*> CallResultLoggers = new .() ~DeleteDictionaryAndValues!(_);
+
+        struct CallbackLogger : CCallbackBase
+        {
+            public CallbackType CallbackType;
+            public CCallbackBase* Original;
+            private CCallbackBase.VTable* _originalVtable = null;
+            private CCallbackBase.VTable _loggedVtable = .();
+
+            public this(CCallbackBase* original, CallbackType callbackType)
+            {
+                CallbackType = callbackType;
+                Original = original;
+
+                //Point the struct to a new vtable that logs any calls then passes them onto the real vtable
+                _originalVtable = Original.Vfptr;
+                _loggedVtable.Run = => Run;
+                _loggedVtable.Run2 = => Run2;
+                _loggedVtable.GetCallbackSizeBytes = => GetCallbackSizeBytes;
+
+                base.Vfptr = &_loggedVtable;
+                base.CallResultType = original.CallResultType;
+                base.CallbackFlags = original.CallbackFlags;
+
+                Original.Vfptr = &_loggedVtable;
+            }
+
+            public void Run(void* param, u8 param1, u64 param2)
+            {
+                //TODO: MAKE THIS CLASS TYPED SO WE CAN ALSO LOG THE STATE OF THE PARAMS (Such as LobbyEnter struct)
+                Logger.WriteLine(scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.Run(void* param: 0x{(int)(void*)param:X}, uint8 param1: {param1}, uint64 param2: {param2})");
+                _originalVtable.Run(Original, param, param1, param2);
+            }
+
+            public void Run2(void* param)
+            {
+                //TODO: MAKE THIS CLASS TYPED SO WE CAN ALSO LOG THE STATE OF THE PARAMS (Such as LobbyEnter struct)
+                Logger.WriteLine(scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.Run2(void* param: 0x{(int)(void*)param:X})");
+                _originalVtable.Run2(Original, param);
+            }
+
+            public i32 GetCallbackSizeBytes()
+            {
+                i32 result = _originalVtable.GetCallbackSizeBytes(Original);
+                Logger.WriteLine(scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.GetCallbackSizeBytes() -> {result}");
+                return result;
+            }
+        }
+
+        struct CallResultLogger : CCallbackBase
+        {
+            public u32 APICallLower;
+            public u32 APICallUpper;
+            public CCallbackBase* Original;
+            private CCallbackBase.VTable* _originalVtable = null;
+            private CCallbackBase.VTable _loggedVtable = .();
+
+            public this(CCallbackBase* original, u32 apiCallLower, u32 apiCallUpper)
+            {
+                /*Id = callbackId;*/
+                APICallLower = apiCallLower;
+                APICallUpper = apiCallUpper;
+                Original = original;
+
+                //Point the struct to a new vtable that logs any calls then passes them onto the real vtable
+                _originalVtable = Original.Vfptr;
+                _loggedVtable.Run = => Run;
+                _loggedVtable.Run2 = => Run2;
+                _loggedVtable.GetCallbackSizeBytes = => GetCallbackSizeBytes;
+
+                base.Vfptr = &_loggedVtable;
+                base.CallResultType = original.CallResultType;
+                base.CallbackFlags = original.CallbackFlags;
+
+                Original.Vfptr = &_loggedVtable;
+            }
+
+            public void Cleanup()
+            {
+                Original.Vfptr = _originalVtable;
+            }
+
+            public void Run(void* param, u8 param1, u64 param2)
+            {
+                //TODO: MAKE THIS CLASS TYPED SO WE CAN ALSO LOG THE STATE OF THE PARAMS (Such as LobbyEnter struct)
+                Logger.WriteLine(scope $"[CALL_RESULT] {base.CallResultType.ToString(.. scope .())}.Run(void* param: 0x{(int)(void*)param:X}, uint8 param1: {param1}, uint64 param2: {param2})");
+                _originalVtable.Run(Original, param, param1, param2);
+            }
+
+            public void Run2(void* param)
+            {
+                //TODO: MAKE THIS CLASS TYPED SO WE CAN ALSO LOG THE STATE OF THE PARAMS (Such as LobbyEnter struct)
+                Logger.WriteLine(scope $"[CALL_RESULT] {base.CallResultType.ToString(.. scope .())}.Run2(void* param: 0x{(int)(void*)param:X})");
+                _originalVtable.Run2(Original, param);
+            }
+
+            public i32 GetCallbackSizeBytes()
+            {
+                i32 result = _originalVtable.GetCallbackSizeBytes(Original);
+                Logger.WriteLine(scope $"[CALL_RESULT] {base.CallResultType.ToString(.. scope .())}.GetCallbackSizeBytes() -> {result}");
+                return result;
+            }
+        }
+
 
         public static mixin GetDLLFunction<T>(HINSTANCE dllHandle, T* func, char8* name) where T : operator explicit void*
         {
@@ -92,6 +199,7 @@ namespace RfgNetworking.Backend.Debug
             GetDLLFunction!(_originalDLLHandle, &SW_RegisterCallback_original, "SW_RegisterCallback");
             GetDLLFunction!(_originalDLLHandle, &SW_UnregisterCallback_original, "SW_UnregisterCallback");
 
+            _inputThread = new .(new () => InputThreadLoop(this));
             _inputThread.Start();
         }
 
@@ -111,20 +219,20 @@ namespace RfgNetworking.Backend.Debug
         }
 
         static bool _lastKeyUpStateF1 = true;
-        public static void InputThreadLoop()
+        public static void InputThreadLoop(DebugBackend backend)
         {
-            while (!_exit)
+            while (!backend._exit)
             {
                 bool keyUpStateF1 = (Win32.GetKeyState(0x70) & 0x8000) == 0; //True if F1 key is up
                 if (keyUpStateF1 && !_lastKeyUpStateF1)
                 {
-                    LogDebugWrappersState();
+                    backend.LogDebugWrappersState();
                 }
                 _lastKeyUpStateF1 = keyUpStateF1;
             }
         }
 
-        private static void LogDebugWrappersState()
+        private void LogDebugWrappersState()
         {
             //Log function call data tracked by the debug wrappers.
             SteamClientWrapper.LogState();
@@ -235,15 +343,105 @@ namespace RfgNetworking.Backend.Debug
         }
 
         [Log]
-        void IDLLBackend.SW_CCSys_InitCallbackFunc(void* callbackFunc, int32 callbackId)
+        void IDLLBackend.SW_CCSys_InitCallbackFunc(CCallbackBase* callback, CallbackType callbackId)
         {
-            SW_CCSys_InitCallbackFunc_original(callbackFunc, callbackId);
+            //Put trampoline function in place of the original that logs calls and then passes the data to the real callback handler
+            CCallbackBase* callbackOverride = null;
+            switch (callbackId)
+            {
+                case .ValidateAuthTicketResponse:
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                case .GetAuthSessionTicketResponse:
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                case .GameLobbyJoinRequested:
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                case .LobbyEnter:
+                    /*var callbackTyped = (CCallback<GameLinkInternet, LobbyEnter, 0>*)callback;*/
+                    //Had to use a pointer here because I couldn't get a reference or pointer to the struct from the list for some reason. Possibly was the debugger lying to me. It doesn't work perfectly in DLLs.
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                case .LobbyDataUpdate:
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                case .LobbyChatUpdate:
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                case .SteamUserStatsReceived:
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                case .SteamUserStatsStored:
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                case .SteamUserAchievementStored:
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                case .P2PSessionRequest:
+                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLoggers.Add(logger);
+                    callbackOverride = logger;
+
+                //The vanilla game only uses these with CCallResult<T>. So report a problem if used here.
+                case .LobbyMatchList, .LobbyCreated:
+                    String errorMessage = scope $"Callback '{callbackId.ToString(.. scope .())}' passed to CommunityBackend.SW_CCSys_InitCallbackFunc(). The vanilla game only passes this to SW_CCSys_RegisterCallResult(). Either something broke or you're using a modded game and this needs to be updated.";
+                    Logger.WriteLine(errorMessage);
+                    Runtime.FatalError(errorMessage);
+
+                default:
+                    String errorMessage = scope $"Unsupported callback ID '{(i32)callbackId}' in CommunityBackend.SW_CCSys_InitCallbackFunc()";
+                    Logger.WriteLine(errorMessage);
+                    Runtime.FatalError(errorMessage);
+            }
+
+            /*LobbyEnter = 504, //RFG uses this with CCallResult and CCallback
+            LobbyMatchList = 510, //RFG only uses this with CCallResult
+            LobbyCreated = 513, //RFG only uses this with CCallResult*/
+
+            if (callbackOverride != null)
+            {
+                SW_CCSys_InitCallbackFunc_original(callbackOverride, callbackId);
+            }
+            else
+            {
+                //TODO: Once all callbacks are wrapped we'll want this case to throw an error instead so we don't miss any callbacks
+                SW_CCSys_InitCallbackFunc_original(callback, callbackId);
+            }
         }
 
-        [Log]
-        void IDLLBackend.SW_CCSys_RemoveCallbackFunc(void* callbackFunc)
+        /*public void CallbackRunLog(CCallbackBase* this, void* param0, bool param1, u64 param2)
         {
-            SW_CCSys_RemoveCallbackFunc_original(callbackFunc);
+
+        }
+
+        public void CallbackRun2Log(CCallbackBase* this, void* param0) Run2;
+        {
+
+        }*/
+
+        [Log]
+        void IDLLBackend.SW_CCSys_RemoveCallbackFunc(CCallbackBase* callback)
+        {
+            SW_CCSys_RemoveCallbackFunc_original(callback);
         }
 
         [Log]
@@ -252,16 +450,114 @@ namespace RfgNetworking.Backend.Debug
         	SW_CCSys_IsBackendActive_original(); //Unused by game
         }
 
-        [Log]
+        //[Log]
         void IDLLBackend.SW_CCSys_ProcessApiCb()
         {
             SW_CCSys_ProcessApiCb_original(); //Game uses this but it's just a void func(void)
         }
 
+        /*[CRepr]
+        public struct CCallResult<T, U> : CCallbackBase
+        {
+            public SteamAPICall ApiCall; //Unique handle for an API call. The vanilla DLL mimics the steamworks API so that's why we use the SteamAPICall type
+            public T* Obj;
+            public function void(T* this, U* data, bool bIOFailure) Func;
+        }*/
+
+        /*LobbyEnter = 504, //RFG uses this with CCallResult and CCallback
+        LobbyMatchList = 510, //RFG only uses this with CCallResult
+        LobbyCreated = 513, //RFG only uses this with CCallResult*/
+
         [Log]
         void IDLLBackend.SW_CCSys_RegisterCallResult(CCallbackBase* callbackResult, uint32 apiCallHandleLower, uint32 apiCallHandleUpper)
         {
-            SW_CCSys_RegisterCallResult_original(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+            Logger.WriteLine(scope $"Registering callback. lower: {apiCallHandleLower}, upper: {apiCallHandleUpper}, ID: {callbackResult.CallResultType}, Flags: {callbackResult.CallbackFlags}");
+
+            CCallbackBase* callResultOverride = null;
+            switch (callbackResult.CallResultType)
+            {
+                case .LobbyEnter:
+                    if (CallResultLoggers.ContainsKey(.LobbyEnter))
+                    {
+                        CallResultLogger* logger = CallResultLoggers[.LobbyEnter];
+                        logger.Cleanup();
+                        delete logger;
+                        CallResultLoggers.Remove(.LobbyEnter);
+                    }
+
+                    CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+                    CallResultLoggers[callbackResult.CallResultType] = logger;
+                    callResultOverride = logger;
+
+                    /*if (!CallResultLoggers.ContainsKey(.LobbyEnter))
+                    {
+                        CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+                        CallResultLoggers[callbackResult.CallResultType] = logger;
+                        callResultOverride = logger;
+                    }*/
+
+                case .LobbyMatchList:
+                    if (CallResultLoggers.ContainsKey(.LobbyMatchList))
+                    {
+                        CallResultLogger* logger = CallResultLoggers[.LobbyMatchList];
+                        logger.Cleanup();
+                        delete logger;
+                        CallResultLoggers.Remove(.LobbyMatchList);
+                    }
+
+                    CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+                    CallResultLoggers[callbackResult.CallResultType] = logger;
+                    callResultOverride = logger;
+
+                    /*if (!CallResultLoggers.ContainsKey(.LobbyMatchList))
+                    {
+                        CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+                        CallResultLoggers[callbackResult.CallResultType] = logger;
+                        callResultOverride = logger;
+                    }*/
+
+                case .LobbyCreated:
+                    if (CallResultLoggers.ContainsKey(.LobbyCreated))
+                    {
+                        CallResultLogger* logger = CallResultLoggers[.LobbyCreated];
+                        logger.Cleanup();
+                        delete logger;
+                        CallResultLoggers.Remove(.LobbyCreated);
+                    }
+
+                    CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+                    CallResultLoggers[callbackResult.CallResultType] = logger;
+                    callResultOverride = logger;
+
+                    /*if (!CallResultLoggers.ContainsKey(.LobbyCreated))
+                    {
+                        CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+                        CallResultLoggers[callbackResult.CallResultType] = logger;
+                        callResultOverride = logger;
+                    }*/
+
+                default:
+                    String errorMessage = scope $"Unsupported callback ID '{(i32)callbackResult.CallResultType}' in CommunityBackend.SW_CCSys_RegisterCallResult()";
+                    Logger.WriteLine(errorMessage);
+                    Runtime.FatalError(errorMessage);
+            }
+
+
+            //TODO: See if the upper/lower arguments or some other field can be used to identify which callback this is, and make typed overloads of the logger so it can log the resulting structs values
+
+            /*CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+            CallResultLoggers.Add(logger);*/
+            //callbackOverride = logger;
+
+            if (callResultOverride != null)
+            {
+                SW_CCSys_RegisterCallResult_original(callResultOverride, apiCallHandleLower, apiCallHandleUpper);
+            }
+            else
+            {
+                SW_CCSys_RegisterCallResult_original(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+            }
+            /*SW_CCSys_RegisterCallResult_original(callbackResult, apiCallHandleLower, apiCallHandleUpper);*/
         }
 
         [Log]

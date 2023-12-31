@@ -16,8 +16,8 @@ namespace RfgNetworking.Backend
         public HSteamPipe SW_CCSys_GetPInterface();
         public void SW_CCSys_GetU();
         public HSteamUser SW_CCSys_GetUInterface();
-        public void SW_CCSys_InitCallbackFunc(void* callbackFunc, i32 callbackId);
-        public void SW_CCSys_RemoveCallbackFunc(void* callbackFunc);
+        public void SW_CCSys_InitCallbackFunc(CCallbackBase* callback, CallbackType callbackId);
+        public void SW_CCSys_RemoveCallbackFunc(CCallbackBase* callback);
         public void SW_CCSys_IsBackendActive();
         public void SW_CCSys_ProcessApiCb();
         public void SW_CCSys_RegisterCallResult(CCallbackBase* callbackResult, u32 apiCallHandleLower, u32 apiCallHandleUpper);

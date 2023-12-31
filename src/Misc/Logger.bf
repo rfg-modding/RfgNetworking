@@ -28,14 +28,14 @@ namespace RfgNetworking.Misc
 
         public static void WriteLine(StringView fmt, params Object[] args)
         {
-            _streamWriter.WriteLine(fmt, args);
+            _streamWriter.WriteLine(fmt, params args);
             if (AutoFlush)
                 _streamWriter.Flush();
         }
 
         public static void Write(StringView fmt, params Object[] args)
         {
-            _streamWriter.Write(fmt, args);
+            _streamWriter.Write(fmt, params args);
         }
 
         public static void Flush()
