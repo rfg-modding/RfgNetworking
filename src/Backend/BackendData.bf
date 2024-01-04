@@ -1,9 +1,10 @@
 using System;
 using RfgNetworking.API;
+using RfgNetworking.Misc;
 
 namespace RfgNetworking.Backend
 {
-    [CRepr]
+    [CRepr, ReflectAll]
     enum CallbackType : i32
     {
         ValidateAuthTicketResponse = 143,
@@ -20,7 +21,7 @@ namespace RfgNetworking.Backend
         P2PSessionRequest = 1202,
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct ValidateAuthTicketResponse
     {
         public CSteamID SteamID;
@@ -28,30 +29,43 @@ namespace RfgNetworking.Backend
         public CSteamID OwnerSteamID;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct GetAuthSessionTicketResponse
     {
         public u32 AuthTicket;
         public BackendResult Result;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct GameLobbyJoinRequested
     {
         public CSteamID SteamIDLobby;
         public CSteamID SteamIDFriend;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct LobbyEnter
     {
-        public u64 SteamIDLobby;
+        public u64 SteamIDLobby; //TODO: Should this be a CSteamID?
         public u32 ChatPermissions;
         public bool Blocked; //TODO: Is this really a bool, or a u8? Naming scheme in rfg.exe indicates its a bool, but the debugger shows it being set to some strange values like 13 (would've expected 255 for true and 0 for false)
         public u32 ChatRoomEnterResponse; //Likely an enum
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
+    public struct LobbyMatchList
+    {
+        public u32 NumLobbiesMatching;
+    }
+
+    [CRepr, ReflectAll]
+    public struct LobbyCreated
+    {
+        public BackendResult Result;
+        public u64 SteamIDLobby; //TODO: Should this be a CSteamID?
+    }
+
+    [CRepr, ReflectAll]
     public struct LobbyDataUpdate
     {
         public u64 SteamIDLobby;
@@ -59,7 +73,7 @@ namespace RfgNetworking.Backend
         public bool Success;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct LobbyChatUpdate
     {
         public u64 SteamIDLobby;
@@ -68,7 +82,7 @@ namespace RfgNetworking.Backend
         public u64 ChatMemberStateChange;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct UserStatsReceived
     {
         public u64 GameID;
@@ -76,14 +90,14 @@ namespace RfgNetworking.Backend
         public CSteamID SteamIDUser;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct UserStatsStored
     {
         public u64 GameID;
         public BackendResult Result;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct UserAchievementStored
     {
         public u64 GameID;
@@ -93,13 +107,13 @@ namespace RfgNetworking.Backend
         public u32 MaxProgress;
     }
     
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct P2PSessionRequest
     {
         public CSteamID SteamIDRemote;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public enum AuthSessionResponse : u32
     {
         OK = 0,
@@ -114,7 +128,7 @@ namespace RfgNetworking.Backend
         PublisherIssuedBan = 9
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public enum BackendResult : u32
     {
         OK = 0x1,
@@ -233,7 +247,7 @@ namespace RfgNetworking.Backend
     //Base class for callbacks and call results. Used by the DLL to communicate events/data to the game asynchronously.
     //Callbacks can send data to multiple listeners
     //Call results only send them to one listener
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct CCallbackBase
     {
     	public CCallbackBase.VTable* Vfptr;
@@ -251,7 +265,7 @@ namespace RfgNetworking.Backend
         }
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct CCallResult<T, U> : CCallbackBase
     {
         public SteamAPICall ApiCall; //Unique handle for an API call. The vanilla DLL mimics the steamworks API so that's why we use the SteamAPICall type
@@ -259,14 +273,14 @@ namespace RfgNetworking.Backend
         public function void(T* this, U* data, bool bIOFailure) Func;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct CCallback<T, U, V> : CCallbackBase where V : const int
     {
         public T* Obj;
         public function void(T* this, U* data) Func;
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct GameLinkInternet
     {
         public GameLinkInternet.VTable* Vtable;
@@ -284,13 +298,13 @@ namespace RfgNetworking.Backend
         }
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public enum GameLinkState
     {
 
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public enum GameLinkError
     {
 

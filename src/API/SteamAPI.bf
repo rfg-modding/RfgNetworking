@@ -1,5 +1,6 @@
 using System.Interop;
 using System;
+using RfgNetworking.Misc;
 
 namespace RfgNetworking.API
 {
@@ -668,7 +669,7 @@ namespace RfgNetworking.API
         }
     }
 
-    [CRepr]
+    [CRepr, ReflectAll]
     public struct CSteamID : u64, IFormattable
     {
         public void ToString(String outString, String format, IFormatProvider formatProvider)
@@ -1004,7 +1005,8 @@ namespace RfgNetworking.API
         MismatchedCallback = 3
     }
 
-    public enum Universe
+    [CRepr]
+    public enum Universe : u32
     {
         Invalid = 0,
 	    Public = 1,

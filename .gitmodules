@@ -1,0 +1,3 @@
+[submodule "dependencies/bon"]
+	path = dependencies/bon
+	url = https://github.com/EinScott/bon.git

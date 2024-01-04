@@ -1,5 +1,5 @@
 FileVersion = 1
-Projects = {RfgNetworking = {Path = "."}}
+Projects = {RfgNetworking = {Path = "."}, bon = {Path = "dependencies/bon"}}
 Unlocked = ["corlib"]
 
 [Workspace]

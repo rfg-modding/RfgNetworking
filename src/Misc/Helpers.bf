@@ -163,4 +163,10 @@ namespace RfgNetworking.Misc
 #endif
         }
     }
+
+    [AttributeUsage(.Class | .Struct | .Interface | .Enum, .AlwaysIncludeTarget | .ReflectAttribute, ReflectUser = .All, AlwaysIncludeUser = .IncludeAllMethods | .AssumeInstantiated)]
+    public struct ReflectAllAttribute : Attribute
+    {
+
+    }
 }

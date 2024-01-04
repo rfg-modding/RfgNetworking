@@ -5,6 +5,7 @@ using RfgNetworking.API;
 using System.Threading;
 using System;
 using System.Collections;
+using Bon;
 
 namespace RfgNetworking.Backend.Debug
 {
@@ -51,10 +52,10 @@ namespace RfgNetworking.Backend.Debug
         SteamRemoteStorageDebugWrapper SteamRemoteStorageWrapper;
         SteamControllerDebugWrapper SteamControllerWrapper;
 
-        List<CallbackLogger*> CallbackLoggers = new .() ~DeleteContainerAndItems!(_);
-        Dictionary<CallbackType, CallResultLogger*> CallResultLoggers = new .() ~DeleteDictionaryAndValues!(_);
+        List<CCallbackBase*> CallbackLoggers = new .() ~DeleteContainerAndItems!(_);
+        Dictionary<CallbackType, CCallbackBase*> CallResultLoggers = new .() ~DeleteDictionaryAndValues!(_);
 
-        struct CallbackLogger : CCallbackBase
+        struct CallbackLogger<T> : CCallbackBase where T : struct
         {
             public CallbackType CallbackType;
             public CCallbackBase* Original;
@@ -79,17 +80,40 @@ namespace RfgNetworking.Backend.Debug
                 Original.Vfptr = &_loggedVtable;
             }
 
+            public void Cleanup()
+            {
+                Original.Vfptr = _originalVtable;
+            }
+
             public void Run(void* param, u8 param1, u64 param2)
             {
-                //TODO: MAKE THIS CLASS TYPED SO WE CAN ALSO LOG THE STATE OF THE PARAMS (Such as LobbyEnter struct)
-                Logger.WriteLine(scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.Run(void* param: 0x{(int)(void*)param:X}, uint8 param1: {param1}, uint64 param2: {param2})");
+                //Convert param and its fields to string and log it
+                String dataFields = scope .();
+                gBonEnv.serializeFlags |= .Verbose;
+                Bon.Serialize<T>(*(T*)param, dataFields);
+
+                String logString = scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.Run({typeof(T).GetName(.. scope .())}* param:\n{dataFields},\nuint8 param1: {param1}, uint64 param2: {param2})";
+                logString.Replace("{", "{{"); //Have to escape these so StreamWriter doesn't think they're formatting parameters
+                logString.Replace("}", "}}");
+                Logger.WriteLine(logString);
+
+                //Call original vtable func
                 _originalVtable.Run(Original, param, param1, param2);
             }
 
             public void Run2(void* param)
             {
-                //TODO: MAKE THIS CLASS TYPED SO WE CAN ALSO LOG THE STATE OF THE PARAMS (Such as LobbyEnter struct)
-                Logger.WriteLine(scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.Run2(void* param: 0x{(int)(void*)param:X})");
+                //Convert param and its fields to string and log it
+                String dataFields = scope .();
+                gBonEnv.serializeFlags |= .Verbose;
+                Bon.Serialize<T>(*(T*)param, dataFields);
+
+                String logString = scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.Run2({typeof(T).GetName(.. scope .())}* param:\n{dataFields})";
+                logString.Replace("{", "{{");
+                logString.Replace("}", "}}");
+                Logger.WriteLine(logString);
+
+                //Call original vtable func
                 _originalVtable.Run2(Original, param);
             }
 
@@ -101,7 +125,7 @@ namespace RfgNetworking.Backend.Debug
             }
         }
 
-        struct CallResultLogger : CCallbackBase
+        struct CallResultLogger <T> : CCallbackBase where T : struct
         {
             public u32 APICallLower;
             public u32 APICallUpper;
@@ -111,7 +135,6 @@ namespace RfgNetworking.Backend.Debug
 
             public this(CCallbackBase* original, u32 apiCallLower, u32 apiCallUpper)
             {
-                /*Id = callbackId;*/
                 APICallLower = apiCallLower;
                 APICallUpper = apiCallUpper;
                 Original = original;
@@ -136,15 +159,33 @@ namespace RfgNetworking.Backend.Debug
 
             public void Run(void* param, u8 param1, u64 param2)
             {
-                //TODO: MAKE THIS CLASS TYPED SO WE CAN ALSO LOG THE STATE OF THE PARAMS (Such as LobbyEnter struct)
-                Logger.WriteLine(scope $"[CALL_RESULT] {base.CallResultType.ToString(.. scope .())}.Run(void* param: 0x{(int)(void*)param:X}, uint8 param1: {param1}, uint64 param2: {param2})");
+                //Convert param and its fields to string and log it
+                String dataFields = scope .();
+                gBonEnv.serializeFlags |= .Verbose;
+                Bon.Serialize<T>(*(T*)param, dataFields);
+
+                String logString = scope $"[CALL_RESULT] {CallResultType.ToString(.. scope .())}.Run({typeof(T).GetName(.. scope .())}* param:\n{dataFields},\nuint8 param1: {param1}, uint64 param2: {param2})";
+                logString.Replace("{", "{{"); //Have to escape these so StreamWriter doesn't think they're formatting parameters
+                logString.Replace("}", "}}");
+                Logger.WriteLine(logString);
+
+                //Call original vtable func
                 _originalVtable.Run(Original, param, param1, param2);
             }
 
             public void Run2(void* param)
             {
-                //TODO: MAKE THIS CLASS TYPED SO WE CAN ALSO LOG THE STATE OF THE PARAMS (Such as LobbyEnter struct)
-                Logger.WriteLine(scope $"[CALL_RESULT] {base.CallResultType.ToString(.. scope .())}.Run2(void* param: 0x{(int)(void*)param:X})");
+                //Convert param and its fields to string and log it
+                String dataFields = scope .();
+                gBonEnv.serializeFlags |= .Verbose;
+                Bon.Serialize<T>(*(T*)param, dataFields);
+
+                String logString = scope $"[CALL_RESULT] {CallResultType.ToString(.. scope .())}.Run2({typeof(T).GetName(.. scope .())}* param:\n{dataFields})";
+                logString.Replace("{", "{{");
+                logString.Replace("}", "}}");
+                Logger.WriteLine(logString);
+
+                //Call original vtable func
                 _originalVtable.Run2(Original, param);
             }
 
@@ -265,10 +306,10 @@ namespace RfgNetworking.Backend.Debug
                 steamClientWrapperInitialized = true;
                 return &SteamClientWrapper;
             }
+
             return steamClient;
         }
 
-        [Log]
         CSteamAPIContext* IDLLBackend.SW_CCSys_DynamicInit(CallbackCounterAndContext* callbackCounterAndContext)
         {
             bool firstRun = (callbackCounterAndContext.Counter == 0);
@@ -350,54 +391,54 @@ namespace RfgNetworking.Backend.Debug
             switch (callbackId)
             {
                 case .ValidateAuthTicketResponse:
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<ValidateAuthTicketResponse>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
                 case .GetAuthSessionTicketResponse:
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<GetAuthSessionTicketResponse>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
                 case .GameLobbyJoinRequested:
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<GameLobbyJoinRequested>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
                 case .LobbyEnter:
                     /*var callbackTyped = (CCallback<GameLinkInternet, LobbyEnter, 0>*)callback;*/
                     //Had to use a pointer here because I couldn't get a reference or pointer to the struct from the list for some reason. Possibly was the debugger lying to me. It doesn't work perfectly in DLLs.
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<LobbyEnter>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
                 case .LobbyDataUpdate:
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<LobbyDataUpdate>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
                 case .LobbyChatUpdate:
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<LobbyChatUpdate>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
                 case .SteamUserStatsReceived:
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<UserStatsReceived>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
                 case .SteamUserStatsStored:
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<UserStatsStored>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
                 case .SteamUserAchievementStored:
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<UserAchievementStored>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
                 case .P2PSessionRequest:
-                    CallbackLogger* logger = new .(callback, callbackId);
+                    CallbackLogger<P2PSessionRequest>* logger = new .(callback, callbackId);
                     CallbackLoggers.Add(logger);
                     callbackOverride = logger;
 
@@ -413,10 +454,6 @@ namespace RfgNetworking.Backend.Debug
                     Runtime.FatalError(errorMessage);
             }
 
-            /*LobbyEnter = 504, //RFG uses this with CCallResult and CCallback
-            LobbyMatchList = 510, //RFG only uses this with CCallResult
-            LobbyCreated = 513, //RFG only uses this with CCallResult*/
-
             if (callbackOverride != null)
             {
                 SW_CCSys_InitCallbackFunc_original(callbackOverride, callbackId);
@@ -427,16 +464,6 @@ namespace RfgNetworking.Backend.Debug
                 SW_CCSys_InitCallbackFunc_original(callback, callbackId);
             }
         }
-
-        /*public void CallbackRunLog(CCallbackBase* this, void* param0, bool param1, u64 param2)
-        {
-
-        }
-
-        public void CallbackRun2Log(CCallbackBase* this, void* param0) Run2;
-        {
-
-        }*/
 
         [Log]
         void IDLLBackend.SW_CCSys_RemoveCallbackFunc(CCallbackBase* callback)
@@ -456,18 +483,6 @@ namespace RfgNetworking.Backend.Debug
             SW_CCSys_ProcessApiCb_original(); //Game uses this but it's just a void func(void)
         }
 
-        /*[CRepr]
-        public struct CCallResult<T, U> : CCallbackBase
-        {
-            public SteamAPICall ApiCall; //Unique handle for an API call. The vanilla DLL mimics the steamworks API so that's why we use the SteamAPICall type
-            public T* Obj;
-            public function void(T* this, U* data, bool bIOFailure) Func;
-        }*/
-
-        /*LobbyEnter = 504, //RFG uses this with CCallResult and CCallback
-        LobbyMatchList = 510, //RFG only uses this with CCallResult
-        LobbyCreated = 513, //RFG only uses this with CCallResult*/
-
         [Log]
         void IDLLBackend.SW_CCSys_RegisterCallResult(CCallbackBase* callbackResult, uint32 apiCallHandleLower, uint32 apiCallHandleUpper)
         {
@@ -479,75 +494,47 @@ namespace RfgNetworking.Backend.Debug
                 case .LobbyEnter:
                     if (CallResultLoggers.ContainsKey(.LobbyEnter))
                     {
-                        CallResultLogger* logger = CallResultLoggers[.LobbyEnter];
+                        var logger = (CallResultLogger<LobbyEnter>*)CallResultLoggers[.LobbyEnter];
                         logger.Cleanup();
                         delete logger;
                         CallResultLoggers.Remove(.LobbyEnter);
                     }
 
-                    CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+                    CallResultLogger<LobbyEnter>* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
                     CallResultLoggers[callbackResult.CallResultType] = logger;
                     callResultOverride = logger;
-
-                    /*if (!CallResultLoggers.ContainsKey(.LobbyEnter))
-                    {
-                        CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
-                        CallResultLoggers[callbackResult.CallResultType] = logger;
-                        callResultOverride = logger;
-                    }*/
 
                 case .LobbyMatchList:
                     if (CallResultLoggers.ContainsKey(.LobbyMatchList))
                     {
-                        CallResultLogger* logger = CallResultLoggers[.LobbyMatchList];
+                        var logger = (CallResultLogger<LobbyMatchList>*)CallResultLoggers[.LobbyMatchList];
                         logger.Cleanup();
                         delete logger;
                         CallResultLoggers.Remove(.LobbyMatchList);
                     }
 
-                    CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+                    CallResultLogger<LobbyMatchList>* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
                     CallResultLoggers[callbackResult.CallResultType] = logger;
                     callResultOverride = logger;
-
-                    /*if (!CallResultLoggers.ContainsKey(.LobbyMatchList))
-                    {
-                        CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
-                        CallResultLoggers[callbackResult.CallResultType] = logger;
-                        callResultOverride = logger;
-                    }*/
 
                 case .LobbyCreated:
                     if (CallResultLoggers.ContainsKey(.LobbyCreated))
                     {
-                        CallResultLogger* logger = CallResultLoggers[.LobbyCreated];
+                        var logger = (CallResultLogger<LobbyCreated>*)CallResultLoggers[.LobbyCreated];
                         logger.Cleanup();
                         delete logger;
                         CallResultLoggers.Remove(.LobbyCreated);
                     }
 
-                    CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
+                    CallResultLogger<LobbyCreated>* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
                     CallResultLoggers[callbackResult.CallResultType] = logger;
                     callResultOverride = logger;
-
-                    /*if (!CallResultLoggers.ContainsKey(.LobbyCreated))
-                    {
-                        CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
-                        CallResultLoggers[callbackResult.CallResultType] = logger;
-                        callResultOverride = logger;
-                    }*/
 
                 default:
                     String errorMessage = scope $"Unsupported callback ID '{(i32)callbackResult.CallResultType}' in CommunityBackend.SW_CCSys_RegisterCallResult()";
                     Logger.WriteLine(errorMessage);
                     Runtime.FatalError(errorMessage);
             }
-
-
-            //TODO: See if the upper/lower arguments or some other field can be used to identify which callback this is, and make typed overloads of the logger so it can log the resulting structs values
-
-            /*CallResultLogger* logger = new .(callbackResult, apiCallHandleLower, apiCallHandleUpper);
-            CallResultLoggers.Add(logger);*/
-            //callbackOverride = logger;
 
             if (callResultOverride != null)
             {
@@ -557,7 +544,6 @@ namespace RfgNetworking.Backend.Debug
             {
                 SW_CCSys_RegisterCallResult_original(callbackResult, apiCallHandleLower, apiCallHandleUpper);
             }
-            /*SW_CCSys_RegisterCallResult_original(callbackResult, apiCallHandleLower, apiCallHandleUpper);*/
         }
 
         [Log]
