@@ -1,6 +1,7 @@
 using System;
 using RfgNetworking.API;
 using RfgNetworking.Misc;
+using Bon;
 
 namespace RfgNetworking.Backend
 {
@@ -308,5 +309,147 @@ namespace RfgNetworking.Backend
     public enum GameLinkError
     {
 
+    }
+
+    struct CallbackLogger<T> : CCallbackBase where T : struct
+    {
+        public CallbackType CallbackType;
+        public CCallbackBase* Original;
+        private CCallbackBase.VTable* _originalVtable = null;
+        private CCallbackBase.VTable _loggedVtable = .();
+
+        public this(CCallbackBase* original, CallbackType callbackType)
+        {
+            CallbackType = callbackType;
+            Original = original;
+
+            //Point the struct to a new vtable that logs any calls then passes them onto the real vtable
+            _originalVtable = Original.Vfptr;
+            _loggedVtable.Run = => Run;
+            _loggedVtable.Run2 = => Run2;
+            _loggedVtable.GetCallbackSizeBytes = => GetCallbackSizeBytes;
+
+            base.Vfptr = &_loggedVtable;
+            base.CallResultType = original.CallResultType;
+            base.CallbackFlags = original.CallbackFlags;
+
+            Original.Vfptr = &_loggedVtable;
+        }
+
+        public void Cleanup()
+        {
+            Original.Vfptr = _originalVtable;
+        }
+
+        public void Run(void* param, u8 param1, u64 param2)
+        {
+            //Convert param and its fields to string and log it
+            String dataFields = scope .();
+            gBonEnv.serializeFlags |= .Verbose;
+            Bon.Serialize<T>(*(T*)param, dataFields);
+
+            String logString = scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.Run({typeof(T).GetName(.. scope .())}* param:\n{dataFields},\nuint8 param1: {param1}, uint64 param2: {param2})";
+            logString.Replace("{", "{{"); //Have to escape these so StreamWriter doesn't think they're formatting parameters
+            logString.Replace("}", "}}");
+            Logger.WriteLine(logString);
+
+            //Call original vtable func
+            _originalVtable.Run(Original, param, param1, param2);
+        }
+
+        public void Run2(void* param)
+        {
+            //Convert param and its fields to string and log it
+            String dataFields = scope .();
+            gBonEnv.serializeFlags |= .Verbose;
+            Bon.Serialize<T>(*(T*)param, dataFields);
+
+            String logString = scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.Run2({typeof(T).GetName(.. scope .())}* param:\n{dataFields})";
+            logString.Replace("{", "{{");
+            logString.Replace("}", "}}");
+            Logger.WriteLine(logString);
+
+            //Call original vtable func
+            _originalVtable.Run2(Original, param);
+        }
+
+        public i32 GetCallbackSizeBytes()
+        {
+            i32 result = _originalVtable.GetCallbackSizeBytes(Original);
+            Logger.WriteLine(scope $"[CALLBACK] {CallbackType.ToString(.. scope .())}.GetCallbackSizeBytes() -> {result}");
+            return result;
+        }
+    }
+
+    struct CallResultLogger <T> : CCallbackBase where T : struct
+    {
+        public u32 APICallLower;
+        public u32 APICallUpper;
+        public CCallbackBase* Original;
+        private CCallbackBase.VTable* _originalVtable = null;
+        private CCallbackBase.VTable _loggedVtable = .();
+
+        public this(CCallbackBase* original, u32 apiCallLower, u32 apiCallUpper)
+        {
+            APICallLower = apiCallLower;
+            APICallUpper = apiCallUpper;
+            Original = original;
+
+            //Point the struct to a new vtable that logs any calls then passes them onto the real vtable
+            _originalVtable = Original.Vfptr;
+            _loggedVtable.Run = => Run;
+            _loggedVtable.Run2 = => Run2;
+            _loggedVtable.GetCallbackSizeBytes = => GetCallbackSizeBytes;
+
+            base.Vfptr = &_loggedVtable;
+            base.CallResultType = original.CallResultType;
+            base.CallbackFlags = original.CallbackFlags;
+
+            Original.Vfptr = &_loggedVtable;
+        }
+
+        public void Cleanup()
+        {
+            Original.Vfptr = _originalVtable;
+        }
+
+        public void Run(void* param, u8 param1, u64 param2)
+        {
+            //Convert param and its fields to string and log it
+            String dataFields = scope .();
+            gBonEnv.serializeFlags |= .Verbose;
+            Bon.Serialize<T>(*(T*)param, dataFields);
+
+            String logString = scope $"[CALL_RESULT] {CallResultType.ToString(.. scope .())}.Run({typeof(T).GetName(.. scope .())}* param:\n{dataFields},\nuint8 param1: {param1}, uint64 param2: {param2})";
+            logString.Replace("{", "{{"); //Have to escape these so StreamWriter doesn't think they're formatting parameters
+            logString.Replace("}", "}}");
+            Logger.WriteLine(logString);
+
+            //Call original vtable func
+            _originalVtable.Run(Original, param, param1, param2);
+        }
+
+        public void Run2(void* param)
+        {
+            //Convert param and its fields to string and log it
+            String dataFields = scope .();
+            gBonEnv.serializeFlags |= .Verbose;
+            Bon.Serialize<T>(*(T*)param, dataFields);
+
+            String logString = scope $"[CALL_RESULT] {CallResultType.ToString(.. scope .())}.Run2({typeof(T).GetName(.. scope .())}* param:\n{dataFields})";
+            logString.Replace("{", "{{");
+            logString.Replace("}", "}}");
+            Logger.WriteLine(logString);
+
+            //Call original vtable func
+            _originalVtable.Run2(Original, param);
+        }
+
+        public i32 GetCallbackSizeBytes()
+        {
+            i32 result = _originalVtable.GetCallbackSizeBytes(Original);
+            Logger.WriteLine(scope $"[CALL_RESULT] {base.CallResultType.ToString(.. scope .())}.GetCallbackSizeBytes() -> {result}");
+            return result;
+        }
     }
 }
