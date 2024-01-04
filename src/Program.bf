@@ -6,7 +6,7 @@ using RfgNetworking.API;
 using System;
 
 //When uncommented this DLL will act as a wrapper DLL to log calls to the original sw_api.dll. Otherwise it'll be a standalone DLL
-//#define UseDebugBackend
+#define UseDebugBackend
 
 namespace RfgNetworking
 {

@@ -63,6 +63,7 @@ namespace RfgNetworking.Backend.Debug
         void IDLLBackend.Init()
         {
             System.Threading.Thread.Sleep(5000);
+            gBonEnv.serializeFlags |= .Verbose;
 
             Logger.WriteLine("********************");
             Logger.WriteLine("Log opened!");

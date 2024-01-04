@@ -2,11 +2,10 @@ using RfgNetworking.Misc;
 using RfgNetworking.API;
 using System.Reflection;
 using System;
+using Bon;
 
 namespace RfgNetworking.Backend.Debug
 {
-
-
     [DebugWrapper<ISteamClient.VTable>, CRepr]
     public struct SteamClientDebugWrapper : ISteamClient
     {
@@ -151,9 +150,16 @@ namespace RfgNetworking.Backend.Debug
                         StringView paramTypeNameShortened = paramTypeName.Substring(paramTypeName.LastIndexOf('.') + 1)..Trim();
                         if (paramType.IsPointer && paramType != typeof(char8*))
                         {
+                            PointerType pointerType = (PointerType)paramType;
+                            Type pointerUnderlyingType = pointerType.UnderlyingType;
+                            String pointerUnderlyingTypeName = pointerUnderlyingType.GetName(.. scope .());
                             if (paramName == "this")
                             {
                                 wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: 0x{{(int)(void*)_originalInterface}}";
+                            }
+                            else if (pointerUnderlyingType.[Friend]mTypeCode == .Struct || pointerUnderlyingType.[Friend]mTypeCode == .Enum) //Accessing mTypeCode directly because IsStruct wasn't returning true on structs that inherit u64 like ControllerHandle
+                            {
+                                wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: {{Bon.SafePointerSerialize<{pointerUnderlyingTypeName}>({paramName:X}, .. scope String())..Replace(\"\{\", \"{{{{\")..Replace(\"\}\", \"}}}}\")}}";
                             }
                             else
                             {
@@ -182,6 +188,18 @@ namespace RfgNetworking.Backend.Debug
                         if (vtfuncSignature.ReturnType.IsPointer && vtfuncSignature.ReturnType != typeof(char8*))
                     	{
                             wrappers += scope $" -> {returnTypeNameShortened}(0x{{(int)(void*)result:X}})";
+
+                            PointerType pointerType = (PointerType)vtfuncSignature.ReturnType;
+                            Type pointerUnderlyingType = pointerType.UnderlyingType;
+                            String pointerUnderlyingTypeName = pointerUnderlyingType.GetName(.. scope .());
+                            if (pointerUnderlyingType.[Friend]mTypeCode == .Struct || pointerUnderlyingType.[Friend]mTypeCode == .Enum) //Accessing mTypeCode directly because IsStruct wasn't returning true on structs that inherit u64 like ControllerHandle
+                            {
+                                wrappers += scope $", value = {{Bon.SafePointerSerialize<{pointerUnderlyingTypeName}>(result, .. scope String())..Replace(\"\{\", \"{{{{\")..Replace(\"\}\", \"}}}}\")}}";
+                            }
+                            else if (pointerUnderlyingType.IsPrimitive)
+                            {
+                                wrappers += scope $", value = {{*result}}";
+                            }
                     	}
                         else if (vtfuncSignature.ReturnType == typeof(char8*))
                         {

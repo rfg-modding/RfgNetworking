@@ -1,3 +1,4 @@
+using System;
 namespace RfgNetworking.Misc;
 
 namespace System.IO
@@ -42,6 +43,25 @@ namespace System.IO
             stream.Close();
             delete stream;
             return fileSize;
+        }
+    }
+}
+
+namespace Bon
+{
+    extension Bon
+    {
+        public static void SafePointerSerialize<T>(T* value, String into, BonEnvironment env = gBonEnv)
+        {
+            var addr = (u64)(int)(void*)value;
+            if (addr == 0 || addr == 0xDEADBEEF || addr == 0xDEADC0DE)
+            {
+                into.Set(scope $"({typeof(T).GetName(.. scope .())})(0x{addr:X})");
+            }
+            else
+            {
+                Bon.Serialize<T>(*value, into, env);
+            }
         }
     }
 }
