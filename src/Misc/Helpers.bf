@@ -125,7 +125,7 @@ namespace RfgNetworking.Misc
             Type returnType = method.ReturnType;
             if (returnType != typeof(void))
             {
-                String returnTypeName = returnType.GetFullName(.. scope .());
+                /*String returnTypeName = returnType.GetFullName(.. scope .());
                 StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
                 if (returnType.IsPointer && returnType != typeof(char8*))
                 {
@@ -143,7 +143,75 @@ namespace RfgNetworking.Misc
                 else
                 {
                     emit += scope $" -> {returnTypeNameShortened}({{@return}})";
+                }*/
+
+                String returnTypeName = returnType.GetFullName(.. scope .());
+                /*StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
+                if (returnType.IsPointer && returnType != typeof(char8*))
+                {
+                    emit += scope $" -> {returnTypeNameShortened}(0x{{(int)(void*)@return:X}})";
                 }
+                else if (returnType == typeof(char8*))
+                {
+                    /*args += scope $"char8* val = @return == null ? \"null\" : @return;\n";
+                    emit += scope $" -> {returnTypeNameShortened}(\"{{scope $""{{val}}""..Append(val)}}\")";*/
+                    args += scope $"char8* val = @return == null ? \"null\" : @return;\n";
+                    emit += scope $" -> {returnTypeNameShortened}(\"\"{{scope String()..Append(val)}}\"\")";
+                }
+                else if (returnType.BaseType == typeof(Enum))
+                {
+                    emit += scope $" -> {returnTypeNameShortened}({{@return.ToString(.. scope .())}})";
+                }
+                else
+                {
+                    emit += scope $" -> {returnTypeNameShortened}({{@return}})";
+                }*/
+
+
+                StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
+                if (returnType.IsPointer && returnType != typeof(char8*))
+                {
+                    emit += scope $" -> {returnTypeNameShortened}(0x{{(int)(void*)@return:X}})";
+
+                    PointerType pointerType = (PointerType)returnType;
+                    Type pointerUnderlyingType = pointerType.UnderlyingType;
+                    String pointerUnderlyingTypeName = pointerUnderlyingType.GetName(.. scope .());
+                    if (pointerUnderlyingType.[Friend]mTypeCode == .Struct || pointerUnderlyingType.[Friend]mTypeCode == .Enum) //Accessing mTypeCode directly because IsStruct wasn't returning true on structs that inherit u64 like ControllerHandle
+                    {
+                        emit += scope $", value = {{Bon.Bon.SafePointerSerialize<{pointerUnderlyingTypeName}>(@return, .. scope String())..Replace(\"\{\", \"{{{{\")..Replace(\"\}\", \"}}}}\")}}";
+                    }
+                    else if (pointerUnderlyingType.IsPrimitive)
+                    {
+                        emit += scope $", value = {{*@return}}";
+                    }
+                }
+                else if (returnType == typeof(char8*))
+                {
+                    /*args += scope $"char8* val = @return == null ? \"null\" : @return;\n";
+                    emit += scope $" -> {returnTypeNameShortened}(\"{{scope $""{{val}}""..Append(val)}}\")";*/
+                    args += scope $"char8* val = @return == null ? \"null\" : @return;\n";
+                    emit += scope $" -> {returnTypeNameShortened}(\"\"{{scope String()..Append(val)}}\"\")";
+                }
+                else if (returnType.BaseType == typeof(Enum))
+                {
+                    emit += scope $" -> {returnTypeNameShortened}({{@return.ToString(.. scope .())}})";
+                }
+                else
+                {
+                    emit += scope $" -> {returnTypeNameShortened}({{@return}})";
+                }
+                /*else if (returnType == typeof(char8*))
+                {
+                    emit += scope $" -> {returnTypeNameShortened}(\"\"{{scope String()..Append(@return)}}\"\")";
+                }
+                else if (returnType.BaseType == typeof(Enum))
+                {
+                    emit += scope $" -> enum {returnTypeNameShortened}(.{{@return.ToString(.. scope .())}})";
+                }
+                else
+                {
+                    emit += scope $" -> {returnTypeNameShortened}({{@return}})";
+                }*/
             }
 
             emit.Append("\");");

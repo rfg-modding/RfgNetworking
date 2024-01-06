@@ -1,6 +1,8 @@
 using System.Interop;
 using System;
 using RfgNetworking.Misc;
+using RfgNetworking.Backend.Debug;
+using System.Threading;
 
 namespace RfgNetworking.API
 {
@@ -104,6 +106,7 @@ namespace RfgNetworking.API
         public struct VTable
         {
             public function HSteamUser(ISteamUser* this) SW_CCSys_GetU;
+            [DontLog]
             public function bool(ISteamUser* this) BLoggedOn;
             public function CSteamID*(ISteamUser* this, CSteamID* __return) GetSteamID;
             public function i32(ISteamUser* this, void* pAuthBlob, i32 cbMaxAuthBlob, CSteamID steamIDGameServer, u32 unIPServer, u16 usPortServer, bool bSecure) InitiateGameConnection;
@@ -663,6 +666,18 @@ namespace RfgNetworking.API
     [CRepr]
     public struct SteamAPICall : u64, IFormattable
     {
+        private static Monitor _getLock = new .() ~delete _;
+        private static u64 _nextAPICallId = 1;
+        public static SteamAPICall GetNext()
+        {
+            _getLock.Enter();
+            u64 result = _nextAPICallId;
+            _nextAPICallId++;
+            _getLock.Exit();
+
+            return result;
+        }
+
         public void ToString(String outString, String format, IFormatProvider formatProvider)
         {
             outString.Set(scope $"{(u64)this}");

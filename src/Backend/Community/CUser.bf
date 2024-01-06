@@ -6,7 +6,7 @@ namespace RfgNetworking.Backend.Community
 {
     public struct CUser : ISteamUser
     {
-        static CSteamID SteamID = (CSteamID)233244329324789232;
+        public static CSteamID SteamID = (CSteamID)83129646994147326;//83805435213237740;//233244329324789232;
         static CSteamID* SteamIDPtr = null; //Couldn't figure out how to put mut specifier on the vtable function pointer
 
         [DebugLog]
@@ -58,7 +58,7 @@ namespace RfgNetworking.Backend.Community
             return (HSteamUser)1;
         }
 
-        [DebugLog]
+        //[DebugLog]
         public bool BLoggedOn()
         {
             return true;

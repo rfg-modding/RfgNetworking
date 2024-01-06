@@ -66,6 +66,12 @@ namespace RfgNetworking.Backend.Debug
 
     }
 
+    //For vtables getting logged with DebugWrapperAttribute<T>. Function pointers with this attribute won't get logged.
+    public struct DontLogAttribute : Attribute
+    {
+
+    }
+
     //Generates wrapper functions for a steam interface. These log every time the interface is used and any data passed to or from it.
     [AttributeUsage(.Struct)]
     public struct DebugWrapperAttribute<TInterface> : Attribute, IOnTypeInit
@@ -115,11 +121,6 @@ namespace RfgNetworking.Backend.Debug
                     wrappers += scope $"public {returnTypeName} {vtfunc.Name}_Log{args}\n";
                     wrappers += "{\n";
 
-                    //LogState() code
-                    {
-                        logStateFunc += scope $"    Logger.WriteLine(scope $\"        {vtfunc.Name}: {{{callCounterName}}}\");\n";
-                    }
-
                     //Call original function
                     wrappers += "    ";
                     if (hasReturnValue)
@@ -141,80 +142,85 @@ namespace RfgNetworking.Backend.Debug
                     wrappers += ");\n";
 
                     //Log arguments & return value
-                    wrappers += scope $"    Logger.WriteLine(scope $""{steamInterfaceNameShortened}::{vtfunc.Name}(";
-                    for (int i = 0; i < vtfuncSignature.ParamCount; i++)
+                    bool shouldLog = !vtfunc.HasCustomAttribute<DontLogAttribute>();
+                    if (shouldLog)
                     {
-                        StringView paramName = vtfuncSignature.GetParamName(i);
-                        Type paramType = vtfuncSignature.GetParamType(i);
-                        String paramTypeName = paramType.GetFullName(.. scope .());
-                        StringView paramTypeNameShortened = paramTypeName.Substring(paramTypeName.LastIndexOf('.') + 1)..Trim();
-                        if (paramType.IsPointer && paramType != typeof(char8*))
+                        wrappers += scope $"    Logger.WriteLine(scope $""{steamInterfaceNameShortened}::{vtfunc.Name}(";
+                        for (int i = 0; i < vtfuncSignature.ParamCount; i++)
                         {
-                            PointerType pointerType = (PointerType)paramType;
-                            Type pointerUnderlyingType = pointerType.UnderlyingType;
-                            String pointerUnderlyingTypeName = pointerUnderlyingType.GetName(.. scope .());
-                            if (paramName == "this")
+                            StringView paramName = vtfuncSignature.GetParamName(i);
+                            Type paramType = vtfuncSignature.GetParamType(i);
+                            String paramTypeName = paramType.GetFullName(.. scope .());
+                            StringView paramTypeNameShortened = paramTypeName.Substring(paramTypeName.LastIndexOf('.') + 1)..Trim();
+                            if (paramType.IsPointer && paramType != typeof(char8*))
                             {
-                                wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: 0x{{(int)(void*)_originalInterface}}";
+                                PointerType pointerType = (PointerType)paramType;
+                                Type pointerUnderlyingType = pointerType.UnderlyingType;
+                                String pointerUnderlyingTypeName = pointerUnderlyingType.GetName(.. scope .());
+                                if (paramName == "this")
+                                {
+                                    wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: 0x{{(int)(void*)_originalInterface}}";
+                                }
+                                else if (pointerUnderlyingType.[Friend]mTypeCode == .Struct || pointerUnderlyingType.[Friend]mTypeCode == .Enum) //Accessing mTypeCode directly because IsStruct wasn't returning true on structs that inherit u64 like ControllerHandle
+                                {
+                                    wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: {{Bon.Bon.SafePointerSerialize<{pointerUnderlyingTypeName}>({paramName:X}, .. scope String())..Replace(\"\{\", \"{{{{\")..Replace(\"\}\", \"}}}}\")}}";
+                                }
+                                else
+                                {
+                                    wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: 0x{{(int)(void*){paramName:X}}}";
+                                }
                             }
-                            else if (pointerUnderlyingType.[Friend]mTypeCode == .Struct || pointerUnderlyingType.[Friend]mTypeCode == .Enum) //Accessing mTypeCode directly because IsStruct wasn't returning true on structs that inherit u64 like ControllerHandle
+                            else if (paramType == typeof(char8*))
                             {
-                                wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: {{Bon.SafePointerSerialize<{pointerUnderlyingTypeName}>({paramName:X}, .. scope String())..Replace(\"\{\", \"{{{{\")..Replace(\"\}\", \"}}}}\")}}";
+                                wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: \"\"{{scope String()..Append({paramName})}}\"\"";
+                            }
+                            else if (paramType.BaseType == typeof(Enum))
+                            {
+                                wrappers += scope $"enum {paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: .{{{paramName}.ToString(.. scope .())}}";
                             }
                             else
                             {
-                                wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: 0x{{(int)(void*){paramName:X}}}";
+                                wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: {{{paramName}}}";
                             }
+                            if (i != vtfuncSignature.ParamCount - 1)
+                                wrappers += ", ";
                         }
-                        else if (paramType == typeof(char8*))
+                        wrappers += ")";
+                        if (hasReturnValue)
                         {
-                            wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: \"\"{{scope String()..Append({paramName})}}\"\"";
-                        }
-                        else if (paramType.BaseType == typeof(Enum))
-                        {
-                            wrappers += scope $"enum {paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: .{{{paramName}.ToString(.. scope .())}}";
-                        }
-                        else
-                        {
-                            wrappers += scope $"{paramTypeNameShortened.Length > 0 ? paramTypeNameShortened : paramTypeName} {paramName}: {{{paramName}}}";
-                        }
-                        if (i != vtfuncSignature.ParamCount - 1)
-                            wrappers += ", ";
-                    }
-                    wrappers += ")";
-                    if (hasReturnValue)
-                    {
-                        StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
-                        if (vtfuncSignature.ReturnType.IsPointer && vtfuncSignature.ReturnType != typeof(char8*))
-                    	{
-                            wrappers += scope $" -> {returnTypeNameShortened}(0x{{(int)(void*)result:X}})";
+                            StringView returnTypeNameShortened = returnTypeName.Substring(returnTypeName.LastIndexOf('.') + 1)..Trim();
+                            if (vtfuncSignature.ReturnType.IsPointer && vtfuncSignature.ReturnType != typeof(char8*))
+                        	{
+                                wrappers += scope $" -> {returnTypeNameShortened}(0x{{(int)(void*)result:X}})";
 
-                            PointerType pointerType = (PointerType)vtfuncSignature.ReturnType;
-                            Type pointerUnderlyingType = pointerType.UnderlyingType;
-                            String pointerUnderlyingTypeName = pointerUnderlyingType.GetName(.. scope .());
-                            if (pointerUnderlyingType.[Friend]mTypeCode == .Struct || pointerUnderlyingType.[Friend]mTypeCode == .Enum) //Accessing mTypeCode directly because IsStruct wasn't returning true on structs that inherit u64 like ControllerHandle
+                                PointerType pointerType = (PointerType)vtfuncSignature.ReturnType;
+                                Type pointerUnderlyingType = pointerType.UnderlyingType;
+                                String pointerUnderlyingTypeName = pointerUnderlyingType.GetName(.. scope .());
+                                if (pointerUnderlyingType.[Friend]mTypeCode == .Struct || pointerUnderlyingType.[Friend]mTypeCode == .Enum) //Accessing mTypeCode directly because IsStruct wasn't returning true on structs that inherit u64 like ControllerHandle
+                                {
+                                    wrappers += scope $", value = {{Bon.SafePointerSerialize<{pointerUnderlyingTypeName}>(result, .. scope String())..Replace(\"\{\", \"{{{{\")..Replace(\"\}\", \"}}}}\")}}";
+                                }
+                                else if (pointerUnderlyingType.IsPrimitive)
+                                {
+                                    wrappers += scope $", value = {{*result}}";
+                                }
+                        	}
+                            else if (vtfuncSignature.ReturnType == typeof(char8*))
                             {
-                                wrappers += scope $", value = {{Bon.SafePointerSerialize<{pointerUnderlyingTypeName}>(result, .. scope String())..Replace(\"\{\", \"{{{{\")..Replace(\"\}\", \"}}}}\")}}";
+                                wrappers += scope $" -> {returnTypeNameShortened}(\"\"{{scope String()..Append(result)}}\"\")";
                             }
-                            else if (pointerUnderlyingType.IsPrimitive)
+                            else if (vtfuncSignature.ReturnType.BaseType == typeof(Enum))
                             {
-                                wrappers += scope $", value = {{*result}}";
+                                wrappers += scope $" -> enum {returnTypeNameShortened}(.{{result.ToString(.. scope .())}})";
                             }
-                    	}
-                        else if (vtfuncSignature.ReturnType == typeof(char8*))
-                        {
-                            wrappers += scope $" -> {returnTypeNameShortened}(\"\"{{scope String()..Append(result)}}\"\")";
+                            else
+                            {
+                                wrappers += scope $" -> {returnTypeNameShortened}({{result}})";
+                            }
                         }
-                        else if (vtfuncSignature.ReturnType.BaseType == typeof(Enum))
-                        {
-                            wrappers += scope $" -> enum {returnTypeNameShortened}(.{{result.ToString(.. scope .())}})";
-                        }
-                        else
-                        {
-                            wrappers += scope $" -> {returnTypeNameShortened}({{result}})";
-                        }
+                        wrappers += "\");\n";
+
                     }
-                    wrappers += "\");\n";
 
                     //Increment call counter
                     wrappers += scope $"    {callCounterName}++;\n";

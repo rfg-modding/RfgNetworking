@@ -1,11 +1,28 @@
 using RfgNetworking.Misc;
 using RfgNetworking.API;
 using System;
+using System.Collections;
 
 namespace RfgNetworking.Backend.Community
 {
     public struct CMatchmaking : ISteamMatchmaking
     {
+        public List<LobbyCreationRequest> LobbyCreationRequests = null;
+
+        public struct LobbyCreationRequest
+        {
+            public SteamAPICall ApiCall;
+            public LobbyType LobbyType;
+            public int MaxMembers;
+
+            public this(SteamAPICall apiCall, LobbyType lobbyType, int maxMembers)
+            {
+                this.ApiCall = apiCall;
+                this.LobbyType = lobbyType;
+                this.MaxMembers = maxMembers;
+            }
+        }
+
         [DebugLog]
         public void ModuleInit() mut
         {
@@ -48,11 +65,15 @@ namespace RfgNetworking.Backend.Community
             Vtable.GetLobbyOwner = => GetLobbyOwner;
             Vtable.SetLobbyOwner = => SetLobbyOwner;
             Vtable.SetLinkedLobby = => SetLinkedLobby;
+
+            LobbyCreationRequests = new .();
         }
 
         [DebugLog]
         public void ModuleShutdown()
         {
+            delete LobbyCreationRequests;
+
             delete Vtable;
         }
 
@@ -137,7 +158,9 @@ namespace RfgNetworking.Backend.Community
         [DebugLog]
         public SteamAPICall CreateLobby(LobbyType eLobbyType, int cMaxMembers)
         {
-            return 0;
+            SteamAPICall apiCall = SteamAPICall.GetNext();
+            LobbyCreationRequests.Add(.(apiCall, eLobbyType, cMaxMembers));
+            return apiCall;
         }
 
         [DebugLog]
@@ -161,25 +184,38 @@ namespace RfgNetworking.Backend.Community
         [DebugLog]
         public int GetNumLobbyMembers(CSteamID steamIDLobby)
         {
-            return 0;
+            return 1; //TODO: De-hardcode
         }
 
         [DebugLog]
         public CSteamID GetLobbyMemberByIndex(CSteamID* __return, CSteamID steamIDLobby, int iMember)
         {
-            return 0;
+            //TODO: De-hardcode and actually record members and their IDs
+            //return (CSteamID)83805435213237740;
+
+            //For some reason this differs from the actual players id in vanilla. I guess maybe you have a personal ID + a lobby member ID?
+            //TODO: Figure out why
+            return (CSteamID)83129647636540704;
         }
 
         [DebugLog]
         public char8* GetLobbyData(CSteamID steamIDLobby, char8* pchKey)
         {
-            return null;
+            if (String.Equals(pchKey, "lobby_id"))
+            {
+                return "";
+            }
+            else
+            {
+                return "UnknownLobbyDataKey!!!";
+            }
+            //return null;
         }
 
         [DebugLog]
         public bool SetLobbyData(CSteamID steamIDLobby, char8* pchKey, char8* pchValue)
         {
-            return false;
+            return true;
         }
 
         [DebugLog]
@@ -269,7 +305,15 @@ namespace RfgNetworking.Backend.Community
         [DebugLog]
         public CSteamID GetLobbyOwner(CSteamID* __return, CSteamID steamIDLobby)
         {
-            return 0;
+            //TODO: De-hardcode and actually record owners of each lobby
+            //return (CSteamID)83805435213237740;
+
+            //TODO: Figure out how this works
+            //Based on logged vanilla data. For some reason the owner id is different from the player ID even if you're the only one in the lobby. Maybe this ID is hardcoded for the THQN server?
+
+            *__return = CUser.SteamID;
+
+            return (CSteamID)342836523205258536;
         }
 
         [DebugLog]

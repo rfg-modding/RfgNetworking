@@ -1,6 +1,7 @@
 using RfgNetworking.API;
 using System;
 using RfgNetworking.Misc;
+using System.Collections;
 
 namespace RfgNetworking.Backend.Community
 {
@@ -21,6 +22,15 @@ namespace RfgNetworking.Backend.Community
         public static CNetworking Networking;
         public static CRemoteStorage RemoteStorage;
         public static CController Controller;
+
+        /*typealias CallbackFunc = function void(void* data);
+        typealias CallResultFunc = function void(void* data, bool param1, SteamAPICall apiCall);*/
+
+        typealias LobbyCreatedCallResultFunc = function void(LobbyCreated* data, bool param1, SteamAPICall apiCall);
+        /*public List<LobbyCreatedCallResultFunc> LobbyCreatedCallResults = new .() ~delete _;*/
+        public List<CCallbackBase*> LobbyCreatedCallResults = new .() ~delete _;
+        public List<CCallbackBase*> LobbyEnterCallbacks = new .() ~delete _;
+        public List<CCallbackBase*> LobbyDataUpdateCallbacks = new .() ~delete _;
 
         void IDLLBackend.Init()
         {
@@ -103,8 +113,10 @@ namespace RfgNetworking.Backend.Community
                 case .GameLobbyJoinRequested:
 
                 case .LobbyEnter:
+                    LobbyEnterCallbacks.Add(callback);
 
                 case .LobbyDataUpdate:
+                    LobbyDataUpdateCallbacks.Add(callback);
 
                 case .LobbyChatUpdate:
 
@@ -135,12 +147,72 @@ namespace RfgNetworking.Backend.Community
 
         void IDLLBackend.SW_CCSys_ProcessApiCb()
         {
+            CSteamID fakeSteamLobbyId = (CSteamID)81064793292695571;
+            //CSteamID fakeSelfSteamId = (CSteamID)83805435213237740;
 
+            if (Matchmaking.LobbyCreationRequests != null)
+            {
+                for (var lobbyCreationRequest in Matchmaking.LobbyCreationRequests)
+                {
+                    for (CCallbackBase* lobbyCreationCallback in LobbyCreatedCallResults)
+                    {
+                        LobbyCreated lobbyCreationData = .();
+                        lobbyCreationData.Result = .OK;
+                        lobbyCreationData.SteamIDLobby = (u64)fakeSteamLobbyId;
+                        Logger.WriteLine("Running LobbyCreated CallResult");
+                        lobbyCreationCallback.Vfptr.Run(lobbyCreationCallback, (void*)&lobbyCreationData, 0, (u64)lobbyCreationRequest.ApiCall);
+                        Logger.WriteLine("$$$Ending LobbyCreated CallResult\n");
+                        //lobbyCreationCallback.Vfptr.Run2(lobbyCreationCallback, (void*)&lobbyCreationData);//, 0, (u64)lobbyCreationRequest.ApiCall);
+                    }
+
+                    //Auto enter the lobby when one is created. May not exactly match vanilla behavior since that possibly involves getting server confirmation first.
+                    //For now this suffices as a test of concept
+                    for (CCallbackBase* lobbyEnterCallback in LobbyEnterCallbacks)
+                    {
+                        LobbyEnter enterData = .();
+                        enterData.SteamIDLobby = (u64)fakeSteamLobbyId;
+                        enterData.ChatPermissions = 2949229;
+                        enterData.Blocked = true;
+                        enterData.ChatRoomEnterResponse = 1;
+                        Logger.WriteLine("Running LobbyEntered Callback");
+                        lobbyEnterCallback.Vfptr.Run2(lobbyEnterCallback, &enterData);
+                        Logger.WriteLine("$$$Ending LobbyEntered Callback\n");
+                    }
+
+                    for (CCallbackBase* lobbyDataUpdateCallback in LobbyDataUpdateCallbacks)
+                    {
+                        LobbyDataUpdate updateData = .();
+                        updateData.SteamIDLobby = (u64)fakeSteamLobbyId;
+                        //TODO: Figure out why this wouldn't be the name of the player who is a member. For some reason game passes the lobby ID for both params here in vanilla
+                        updateData.SteamIDMember = (u64)fakeSteamLobbyId;//(u64)fakeSelfSteamId;
+                        updateData.Success = true;
+                        Logger.WriteLine("Running LobbyDataUpdate Callback");
+                        lobbyDataUpdateCallback.Vfptr.Run2(lobbyDataUpdateCallback, &updateData);
+                        Logger.WriteLine("$$$Ending LobbyDataUpdate Callback\n");
+                    }
+                }
+                Matchmaking.LobbyCreationRequests.Clear();
+            }
         }
 
         void IDLLBackend.SW_CCSys_RegisterCallResult(CCallbackBase* callbackResult, uint32 apiCallHandleLower, uint32 apiCallHandleUpper)
         {
+            switch (callbackResult.CallResultType)
+            {
+                case .LobbyEnter:
 
+
+                case .LobbyMatchList:
+
+
+                case .LobbyCreated:
+                    LobbyCreatedCallResults.Add(callbackResult);
+
+                default:
+                    String errorMessage = scope $"Unsupported callback ID '{(i32)callbackResult.CallResultType}' in CommunityBackend.SW_CCSys_RegisterCallResult()";
+                    Logger.WriteLine(errorMessage);
+                    Runtime.FatalError(errorMessage);
+            }
         }
 
         void IDLLBackend.SW_CCSys_UnregisterCallResult(CCallbackBase* callbackResult, uint32 apiCallHandleLower, uint32 apiCallHandleUpper)

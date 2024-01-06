@@ -135,7 +135,8 @@ namespace RfgNetworking.Backend.Community
         [DebugLog]
         public char8* GetFriendPersonaName(CSteamID steamIDFriend)
         {
-            return null;
+            //return null;
+            return "moneyl"; //TODO: De-hardcode. For testing purposes only
         }
 
         [DebugLog]

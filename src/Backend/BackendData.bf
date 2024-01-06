@@ -355,6 +355,8 @@ namespace RfgNetworking.Backend
 
             //Call original vtable func
             _originalVtable.Run(Original, param, param1, param2);
+
+            Logger.WriteLine(scope $"[CALLBACK_END$$$] {CallbackType.ToString(.. scope .())}.Run()\n");
         }
 
         public void Run2(void* param)
@@ -371,6 +373,8 @@ namespace RfgNetworking.Backend
 
             //Call original vtable func
             _originalVtable.Run2(Original, param);
+
+            Logger.WriteLine(scope $"[CALLBACK_END$$$] {CallbackType.ToString(.. scope .())}.Run2()\n");
         }
 
         public i32 GetCallbackSizeBytes()
@@ -427,6 +431,8 @@ namespace RfgNetworking.Backend
 
             //Call original vtable func
             _originalVtable.Run(Original, param, param1, param2);
+
+            Logger.WriteLine(scope $"[CALL_RESULT_END$$$] {CallResultType.ToString(.. scope .())}.Run()\n");
         }
 
         public void Run2(void* param)
@@ -443,6 +449,8 @@ namespace RfgNetworking.Backend
 
             //Call original vtable func
             _originalVtable.Run2(Original, param);
+
+            Logger.WriteLine(scope $"[CALL_RESULT_END$$$] {CallResultType.ToString(.. scope .())}.Run2()\n");
         }
 
         public i32 GetCallbackSizeBytes()
