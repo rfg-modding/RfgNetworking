@@ -1,6 +1,0 @@
-FileVersion = 1
-Projects = {RfgNetworking = {Path = "."}, bon = {Path = "dependencies/bon"}}
-Unlocked = ["corlib"]
-
-[Workspace]
-StartupProject = "RfgNetworking"
