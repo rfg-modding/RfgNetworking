@@ -50,5 +50,20 @@ namespace RfgNetworking.Win32
     {
         [Import("kernel32.lib"), CLink, CallingConvention(.Stdcall)]
         public static extern BOOL VirtualProtect(void* lpAddress, uint dwSize, PAGE_PROTECTION_FLAGS flNewProtect, out PAGE_PROTECTION_FLAGS lpflOldProtect);
+
+		[Import("kernel32.lib"), CLink, CallingConvention(.Stdcall)]
+		public static extern void GetLocalTime(SystemTime* lpSystemTime);
     }
+
+	[CRepr]
+	public struct SystemTime{
+		public uint16 Year;
+		public uint16 Month;
+		public uint16 DayOfWeek;
+		public uint16 Day;
+		public uint16 Hour;
+		public uint16 Minute;
+		public uint16 Second;
+		public uint16 Milliseconds;
+	}
 }

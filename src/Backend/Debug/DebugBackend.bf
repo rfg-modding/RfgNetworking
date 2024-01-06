@@ -206,8 +206,8 @@ namespace RfgNetworking.Backend.Debug
                     SteamControllerWrapper.Init(steamApiContext.Controller, steamApiContext.Controller.Vtable);
                     steamApiContext.Controller = &SteamControllerWrapper;
             	}
-                Logger.Write(scope $"SW_CCSys_DynamicInit(CallbackCounterAndContext* callbackCounterAndContext: 0x{(int)(void*)callbackCounterAndContext:X})");
-                Logger.Write(scope $" -> CSteamAPIContext*(0x{(int)(void*)steamApiContext:X})");
+                Logger.WriteLine(scope $"SW_CCSys_DynamicInit(CallbackCounterAndContext* callbackCounterAndContext: 0x{(int)(void*)callbackCounterAndContext:X})");
+                Logger.WriteLine(scope $" -> CSteamAPIContext*(0x{(int)(void*)steamApiContext:X})");
                 Logger.Flush();
                 Logger.WriteLine("");
             }
