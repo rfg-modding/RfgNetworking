@@ -1,2 +1,5 @@
 ﻿build
 recovery
+.vs
+Client/obj
+Server/obj
