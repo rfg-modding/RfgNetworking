@@ -5,10 +5,18 @@ set(CMAKE_RELEASE_POSTFIX "")
 set(CMAKE_RELWITHDEBINFO_POSTFIX "")
 
 # Add source to this project's executable.
-add_library (sw_api SHARED "sw_api.cpp" "sw_api.h")
+add_library(sw_api SHARED "sw_api.cpp" "IBackend.h" "Typedefs.h" "Backend/Debug/DebugBackend.h" "Backend/Debug/DebugBackend.cpp" "Backend/IPC/IPCBackend.h" "Backend/IPC/IPCBackend.cpp" "Backend/BackendData.h")
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET sw_api PROPERTY CXX_STANDARD 20)
-endif()
+# Make cmake output sw_api.dll to the RFGR directory
+set_target_properties(sw_api
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${RFGR_DIRECTORY}"
+    LIBRARY_OUTPUT_DIRECTORY "${RFGR_DIRECTORY}"
+    RUNTIME_OUTPUT_DIRECTORY "${RFGR_DIRECTORY}"
+)
 
-# TODO: Add tests and install targets if needed.
+target_include_directories(sw_api SYSTEM PRIVATE
+    ${CMAKE_SOURCE_DIR}/Shim/
+)
+
+set_property(TARGET sw_api PROPERTY CXX_STANDARD 23)
